@@ -64,6 +64,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         quantity: submission.value.quantity || 0,
         sizes: submission.value.sizes,
         colors: submission.value.colors,
+        userId: user.id,
       },
     });
     
