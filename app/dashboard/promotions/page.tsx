@@ -36,8 +36,16 @@ async function getData() {
     }),
   ]);
 
+  // Transform discount codes to match the expected type
+  const transformedDiscountCodes = discountCodes.map(code => ({
+    ...code,
+    type: "percentage" as const,
+    value: code.percentage,
+    maxUses: code.maxUses ?? 0,
+  }));
+
   return {
-    discountCodes,
+    discountCodes: transformedDiscountCodes,
     flashSales,
   };
 }
