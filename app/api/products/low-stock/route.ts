@@ -24,10 +24,12 @@ export async function GET(req: Request) {
       },
     });
 
-    const formattedProducts = lowStockProducts.map((product: Product) => ({
+    const formattedProducts = lowStockProducts.map((product) => ({
       ...product,
+      brand: product.brand ?? undefined,
+      material: product.material ?? undefined,
       lastUpdated: product.updatedAt.toISOString()
-    }));
+    })) as Product[];
 
     return NextResponse.json(formattedProducts);
   } catch (error) {
