@@ -15,12 +15,12 @@ export async function GET(req: Request) {
     const lowStockProducts = await db.product.findMany({
       where: {
         userId: user.id,
-        stockQuantity: {
+        quantity: {
           lte: 10, // Products with stock less than or equal to 10
         },
       },
       orderBy: {
-        stockQuantity: "asc",
+        quantity: "asc",
       },
     });
 
