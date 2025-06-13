@@ -40,7 +40,7 @@ export async function getOrders() {
       prisma.order.count(),
       prisma.order.aggregate({
         _sum: {
-          total: true,
+          amount: true,
         },
       }),
     ]);
@@ -48,7 +48,7 @@ export async function getOrders() {
     return {
       orders,
       totalOrders,
-      totalRevenue: totalRevenue._sum.total || 0,
+      totalRevenue: totalRevenue._sum.amount || 0,
     };
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -149,7 +149,7 @@ export async function getAnalytics() {
       prisma.order.count(),
       prisma.order.aggregate({
         _sum: {
-          total: true,
+          amount: true,
         },
       }),
       prisma.product.count(),
@@ -193,7 +193,7 @@ export async function getAnalytics() {
 
     return {
       totalOrders,
-      totalRevenue: totalRevenue._sum.total || 0,
+      totalRevenue: totalRevenue._sum.amount || 0,
       totalProducts,
       totalCustomers,
       recentOrders,
