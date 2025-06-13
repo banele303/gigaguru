@@ -12,7 +12,7 @@ export async function GET(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const refunds = await db.refund.findMany({
+    const refunds = await db.refundRequest.findMany({
       where: {
         userId: user.id,
       },
