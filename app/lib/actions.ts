@@ -61,7 +61,7 @@ export async function getProducts() {
     const [products, totalProducts] = await Promise.all([
       prisma.product.findMany({
         include: {
-          category: true,
+          categories: true,
           flashSaleProducts: {
             include: {
               flashSale: true,
@@ -239,7 +239,7 @@ export async function getProductById(id: string) {
         id,
       },
       include: {
-        category: true,
+        categories: true,
         flashSaleProducts: {
           include: {
             flashSale: true,
