@@ -61,7 +61,7 @@ export async function getProducts() {
     const [products, totalProducts] = await Promise.all([
       prisma.product.findMany({
         include: {
-          categories: true,
+          category: true,
           flashSaleProducts: {
             include: {
               flashSale: true,
@@ -239,7 +239,7 @@ export async function getProductById(id: string) {
         id,
       },
       include: {
-        categories: true,
+        category: true,
         flashSaleProducts: {
           include: {
             flashSale: true,
@@ -358,7 +358,7 @@ export async function updateOrderStatus(id: string, status: string) {
 
 export async function updateProductStatus(id: string, status: string) {
   try {
-    const product = await prisma.product.update({
+    const product = await prisma.order.update({
       where: {
         id,
       },
