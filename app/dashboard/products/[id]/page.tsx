@@ -2,7 +2,7 @@ import { EditForm } from "@/app/components/dashboard/EditForm";
 import prisma from "@/app/lib/db";
 import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
-import { ProductStatus } from "@/app/lib/prisma-types";
+import { ProductStatus, Category } from "@/app/lib/prisma-types";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +51,11 @@ async function getData(productId: string) {
     return notFound();
   }
 
-  // Transform the data to use our custom ProductStatus enum
+  // Transform the data to use our custom enums
   return {
     ...data,
     status: data.status as ProductStatus,
+    category: data.category as Category,
   };
 }
 
