@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, PartyPopper, ShoppingBag, User2 } from "lucide-react";
 import { formatPrice } from "@/app/lib/utils";
 import { getData } from "@/app/lib/actions";
-import { Order } from "@/app/lib/zodSchemas";
+import { Order } from "@prisma/client";
 
 export async function DashboardStats() {
   const { products, user, order } = await getData();
