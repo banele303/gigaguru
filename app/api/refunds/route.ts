@@ -14,7 +14,9 @@ export async function GET(req: Request) {
 
     const refunds = await db.refundRequest.findMany({
       where: {
-        userId: user.id,
+        order: {
+          userId: user.id
+        }
       },
       include: {
         order: {
