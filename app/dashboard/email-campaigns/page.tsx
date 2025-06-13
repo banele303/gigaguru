@@ -8,6 +8,7 @@ type EmailCampaignWithRecipients = {
   name: string;
   subject: string;
   content: string;
+  status: string;
   scheduledAt: Date | null;
   createdAt: Date;
   userId: string;
