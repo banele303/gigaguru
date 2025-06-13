@@ -62,7 +62,7 @@ async function getData() {
         name: item.product.name,
         price: item.product.price,
       },
-      discountPrice: item.discountPrice,
+      discountPrice: item.product.price * (1 - item.discountPercentage / 100),
     })),
   }));
 
