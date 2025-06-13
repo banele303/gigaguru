@@ -44,9 +44,26 @@ async function getData() {
     maxUses: code.maxUses ?? 0,
   }));
 
+  // Transform flash sales to match the expected type
+  const transformedFlashSales = flashSales.map(sale => ({
+    id: sale.id,
+    name: sale.name,
+    description: sale.description ?? "",
+    startDate: sale.startDate,
+    endDate: sale.endDate,
+    isActive: sale.isActive,
+    products: sale.products.map(item => ({
+      product: {
+        name: item.product.name,
+        price: item.product.price,
+      },
+      discountPrice: item.discountPrice,
+    })),
+  }));
+
   return {
     discountCodes: transformedDiscountCodes,
-    flashSales,
+    flashSales: transformedFlashSales,
   };
 }
 
