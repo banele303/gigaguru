@@ -27,6 +27,7 @@ model User {
   productViews ProductView[]
   cartAbandonments CartAbandonment[]
   emailCampaigns EmailCampaign[]
+  products Product[]
 
   createdAt DateTime @default(now())
 }
@@ -49,6 +50,8 @@ model Product {
   views       Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
 
   reviews     Review[]
   orderItems  OrderItem[]
