@@ -51,11 +51,19 @@ async function getData(productId: string) {
     return notFound();
   }
 
-  // Transform the data to use our custom enums
+  // Transform the data to use our custom enums and handle nullable fields
   return {
     ...data,
     status: data.status as ProductStatus,
     category: data.category as Category,
+    reviews: data.reviews.map(review => ({
+      ...review,
+      comment: review.comment ?? "", // Convert null to empty string
+      user: {
+        firstName: review.user.firstName ?? null,
+        profileImage: review.user.profileImage ?? null,
+      }
+    }))
   };
 }
 
