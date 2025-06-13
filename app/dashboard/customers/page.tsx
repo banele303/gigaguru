@@ -7,8 +7,10 @@ import { unstable_noStore as noStore } from "next/cache";
 
 type CustomerWithOrders = {
   id: string;
-  name: string | null;
+  firstName: string;
+  lastName: string;
   email: string;
+  profileImage: string;
   createdAt: Date;
   _count: {
     orders: number;
@@ -57,7 +59,7 @@ async function getData() {
   ]);
 
   return {
-    customers: customers.map((customer: CustomerWithOrders): CustomerWithTotalSpent => ({
+    customers: customers.map((customer): CustomerWithTotalSpent => ({
       ...customer,
       totalSpent: customer.orders.reduce((acc, order) => acc + order.amount, 0),
     })),
