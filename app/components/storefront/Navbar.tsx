@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { NavbarLinks } from "./NavbarLinks";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { ShoppingBagIcon } from "lucide-react";
+import { Menu, ShoppingBagIcon } from "lucide-react";
 import { UserDropdown } from "./UserDropdown";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,14 @@ import {
 } from "@kinde-oss/kinde-auth-nextjs/components";
 import { redis } from "@/app/lib/redis";
 import { Cart } from "@/app/lib/interfaces";
+import { SearchBar } from "./SearchBar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export async function Navbar() {
   const { getUser } = getKindeServerSession();
@@ -20,46 +28,73 @@ export async function Navbar() {
   const total = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
-    <nav className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
-      <div className="flex items-center">
-        <Link href="/">
-          <h1 className="text-black font-bold text-xl lg:text-3xl">
-            Shoe<span className="text-primary">Blessed</span>
-          </h1>
-        </Link>
-        <NavbarLinks />
-      </div>
-
-      <div className="flex items-center">
-        {user ? (
-          <>
-            <Link href="/bag" className="group p-2 flex items-center mr-2">
-              <ShoppingBagIcon className="h-6 w-6 text-gray-400 group-hover:text-gray-500" />
-              <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-                {total}
-              </span>
-            </Link>
-
-            <UserDropdown
-              email={user.email as string}
-              name={user.given_name as string}
-              userImage={
-                user.picture ?? `https://avatar.vercel.sh/${user.given_name}`
-              }
-            />
-          </>
-        ) : (
-          <div className="hidden md:flex md:flex-1 md:items-center md:justify-end md:space-x-2">
-            <Button variant="ghost" asChild>
-              <LoginLink>Sign in</LoginLink>
-            </Button>
-            <span className="h-6 w-px bg-gray-200"></span>
-            <Button variant="ghost" asChild>
-              <RegisterLink>Create Account</RegisterLink>
-            </Button>
+    <header className="sticky top-0 z-40 w-full border-b bg-background">
+      <nav className="container mx-auto flex items-center justify-between p-4">
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <h1 className="text-2xl font-bold text-primary">ShoeBlessed</h1>
+          </Link>
+          <div className="hidden lg:block">
+            <NavbarLinks />
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+
+        <div className="hidden lg:flex flex-1 justify-center px-8">
+          <SearchBar />
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
+            {user ? (
+              <>
+                <UserDropdown
+                  email={user.email as string}
+                  name={user.given_name as string}
+                  userImage={
+                    user.picture ??
+                    `https://avatar.vercel.sh/${user.given_name}`
+                  }
+                />
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <LoginLink>Sign in</LoginLink>
+                </Button>
+                <Button asChild>
+                  <RegisterLink>Create Account</RegisterLink>
+                </Button>
+              </>
+            )}
+          </div>
+
+          <Link href="/bag" className="flex items-center gap-1">
+            <ShoppingBagIcon className="h-6 w-6" />
+            <span className="text-sm font-medium">{total}</span>
+          </Link>
+
+          <div className="lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4">
+                  <NavbarLinks />
+                </div>
+                <div className="mt-4 lg:hidden">
+                  <SearchBar />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </nav>
+    </header>
   );
 }

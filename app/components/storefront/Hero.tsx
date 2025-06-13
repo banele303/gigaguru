@@ -8,8 +8,19 @@ import {
 } from "@/components/ui/carousel";
 import Image from "next/image";
 
-async function getData() {
+interface BannerData {
+  id: string;
+  title: string;
+  imageString: string;
+}
+
+async function getData(): Promise<BannerData[]> {
   const data = await prisma.banner.findMany({
+    select: {
+      id: true,
+      title: true,
+      imageString: true,
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -24,7 +35,7 @@ export async function Hero() {
   return (
     <Carousel>
       <CarouselContent>
-        {data.map((item) => (
+        {data.map((item: BannerData) => (
           <CarouselItem key={item.id}>
             <div className="relative h-[60vh] lg:h-[80vh]">
               <Image

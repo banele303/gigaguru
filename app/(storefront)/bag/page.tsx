@@ -8,6 +8,7 @@ import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { formatPrice } from "@/app/lib/utils";
 
 import { redirect } from "next/navigation";
 
@@ -65,7 +66,7 @@ export default async function BagRoute() {
                 <div className="flex flex-col h-full justify-between">
                   <div className="flex items-center gap-x-2">
                     <p>{item.quantity} x</p>
-                    <p>${item.price}</p>
+                    <p>{formatPrice(item.price)}</p>
                   </div>
 
                   <form action={delItem} className="text-end">
@@ -77,9 +78,9 @@ export default async function BagRoute() {
             </div>
           ))}
           <div className="mt-10">
-            <div className="flex items-center justify-between font-medium">
-              <p>Subtotal:</p>
-              <p>${new Intl.NumberFormat("en-US").format(totalPrice)}</p>
+            <div className="flex justify-between">
+              <p>Total</p>
+              <p>{formatPrice(totalPrice)}</p>
             </div>
 
             <form action={checkOut}>

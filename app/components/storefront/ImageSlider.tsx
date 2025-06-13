@@ -33,11 +33,11 @@ export function ImageSlider({ images }: iAppProps) {
     <div className="grid gap-6 md:gap-3 items-start">
       <div className="relative overflow-hidden rounded-lg">
         <Image
-          width={600}
-          height={600}
+          width={500}
+          height={500}
           src={images[mainImageIndex]}
           alt="Product image"
-          className="object-cover w-[600px] h-[600px]"
+          className="object-cover w-full max-h-[500px]"
         />
 
         <div className="absolute inset-0 flex items-center justify-between px-4">
@@ -50,14 +50,14 @@ export function ImageSlider({ images }: iAppProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-5 gap-1.5 w-full">
         {images.map((image, index) => (
           <div
             className={cn(
               index === mainImageIndex
                 ? "border-2 border-primary"
                 : "border border-gray-200",
-              "relative overflow-hidden rounded-lg cursor-pointer"
+              "relative overflow-hidden rounded-lg cursor-pointer w-full"
             )}
             key={index}
             onClick={() => handleImageClick(index)}
@@ -67,7 +67,7 @@ export function ImageSlider({ images }: iAppProps) {
               alt="Product Image"
               width={100}
               height={100}
-              className="object-cover w-[100px] h-[100px]"
+              className="object-cover w-full h-[100px]"
             />
           </div>
         ))}

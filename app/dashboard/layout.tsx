@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { DashboardNavigation } from "../components/dashboard/DasboardNavigation";
+import { DashboardSidebarWrapper } from "../components/dashboard/DashboardSidebarWrapper";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { CircleUser, MenuIcon } from "lucide-react";
@@ -15,6 +15,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { unstable_noStore as noStore } from "next/cache";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 export default async function DashboardLayout({
   children,
@@ -28,46 +29,58 @@ export default async function DashboardLayout({
   if (!user || user.email !== "alexsouthflow2@gmail.com") {
     return redirect("/");
   }
+
   return (
-    <div className="flex w-full flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <header className="sticky top-0 flex h-16 items-center justify-between gap-4 border-b bg-white">
-        <nav className="hidden font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-          <DashboardNavigation />
-        </nav>
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar for desktop */}
+      <div className="hidden lg:block">
+        <DashboardSidebarWrapper />
+      </div>
 
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              className="shrink-0 md:hidden"
-              variant="outline"
-              size="icon"
-            >
-              <MenuIcon className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <nav className="flex flex-col gap-6 text-lg font-medium mt-5">
-              <DashboardNavigation />
-            </nav>
-          </SheetContent>
-        </Sheet>
+      {/* Mobile menu */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            className="lg:hidden fixed top-4 left-4 z-50"
+            variant="outline"
+            size="icon"
+          >
+            <MenuIcon className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-[280px] sm:w-[350px]">
+          <DashboardSidebarWrapper />
+        </SheetContent>
+      </Sheet>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="icon" className="rounded-full">
-              <CircleUser className="w-5 h-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <LogoutLink>Logout</LogoutLink>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
-      <main className="my-5">{children}</main>
+      {/* Main content */}
+      <div className="flex-1 overflow-auto">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="rounded-full">
+                  <CircleUser className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <LogoutLink>Logout</LogoutLink>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+      </div>
     </div>
   );
 }

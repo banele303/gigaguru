@@ -20,7 +20,13 @@ model User {
   lastName     String
   profileImage String
 
-  orders Order[]
+  orders  Order[]
+  reviews Review[]
+  favorites Favorite[]
+  analytics Analytics[]
+  productViews ProductView[]
+  cartAbandonments CartAbandonment[]
+  emailCampaigns EmailCampaign[]
 
   createdAt DateTime @default(now())
 }
@@ -29,13 +35,39 @@ model Product {
   id          String        @id @default(uuid())
   name        String
   description String
-  status      ProductStatus
+  status      ProductStatus @default(draft)
   price       Int
   images      String[]
   category    Category
   isFeatured  Boolean       @default(false)
+  sku         String        @unique
+  sizes       String[]
+  colors      String[]
+  quantity    Int           @default(0)
+  brand       String?
+  material    String?
+  views       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  createdAt DateTime @default(now())
+  reviews     Review[]
+  orderItems  OrderItem[]
+  Favorite    Favorite[]
+  analytics   Analytics[]
+  productViews ProductView[]
+  flashSaleProducts FlashSaleProduct[]
+}
+
+model Review {
+  id          String    @id @default(uuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  rating      Int       @default(5) // Validation for min(1) and max(5) should be handled at application level
+  comment     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Banner {
@@ -47,14 +79,175 @@ model Banner {
 }
 
 model Order {
-  id     String @id @default(uuid())
-  status String @default("pending")
-  amount Int
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  amount         Int
+  status         String          @default("pending") // pending, processing, shipped, delivered, cancelled
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  items          OrderItem[]
+  refundRequests RefundRequest[]
+  discountCodeId String?
+  discountCode   DiscountCode?   @relation(fields: [discountCodeId], references: [id])
+}
 
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String?
-
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  size      String?
+  color     String?
+  price     Int
   createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  type      String   // 'page_view', 'cart_add', 'checkout_start', 'checkout_complete'
+  userId    String?
+  productId String?
+  metadata  Json?    // Store additional data like source, device, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User?    @relation(fields: [userId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+}
+
+model ProductView {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String?
+  viewedAt  DateTime @default(now())
+  source    String?  // 'direct', 'search', 'social', etc.
+  device    String?  // 'mobile', 'desktop', 'tablet'
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
+}
+
+model CartAbandonment {
+  id        String   @id @default(cuid())
+  userId    String?
+  items     Json     // Array of cart items
+  total     Float
+  abandonedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model RefundRequest {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  reason    String
+  status    String   @default("pending") // pending, approved, rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiscountCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String?
+  percentage  Int      @default(0)
+  maxUses     Int?
+  usedCount   Int      @default(0)
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  redemptions Order[]
+}
+
+model FlashSale {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products FlashSaleProduct[]
+}
+
+model FlashSaleProduct {
+  id          String   @id @default(cuid())
+  flashSaleId String
+  flashSale   FlashSale @relation(fields: [flashSaleId], references: [id])
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  discountPercentage Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EmailCampaign {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  content     String   @db.Text
+  status      String   @default("draft") // draft, scheduled, sent, failed
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  recipients EmailCampaignRecipient[]
+
+  @@index([userId])
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  status    String   @default("active") // active, unsubscribed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emailCampaigns EmailCampaignRecipient[]
+
+  @@index([email])
+}
+
+model EmailCampaignRecipient {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    EmailCampaign @relation(fields: [campaignId], references: [id])
+  subscriberId String
+  subscriber  Subscriber @relation(fields: [subscriberId], references: [id])
+  status      String   @default("pending") // pending, sent, failed
+  sentAt      DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([campaignId, subscriberId]) // Ensures a recipient is only added once per campaign
 }
 
 enum ProductStatus {
@@ -67,4 +260,26 @@ enum Category {
   men
   women
   kids
+  sports
+  home
+  beauty
+  jewellery
+  technology
+  brands
+  deals
+  sale
+}
+
+enum CampaignStatus {
+  draft
+  scheduled
+  sending
+  sent
+  failed
+}
+
+enum RecipientStatus {
+  pending
+  sent
+  failed
 }

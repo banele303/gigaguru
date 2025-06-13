@@ -1,86 +1,86 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OrdersTable } from "@/app/components/dashboard/orders/OrdersTable";
+import { RefundRequestsTable } from "@/app/components/dashboard/orders/RefundRequestsTable";
 import prisma from "@/app/lib/db";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { unstable_noStore as noStore } from "next/cache";
 
 async function getData() {
-  const data = await prisma.order.findMany({
-    select: {
-      amount: true,
-      createdAt: true,
-      status: true,
-      id: true,
-      User: {
-        select: {
-          firstName: true,
-          email: true,
-          profileImage: true,
+  const [orders, refundRequests] = await Promise.all([
+    prisma.order.findMany({
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: true,
+          },
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    prisma.refundRequest.findMany({
+      include: {
+        order: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+  ]);
 
-  return data;
+  return {
+    orders,
+    refundRequests,
+  };
 }
 
 export default async function OrdersPage() {
   noStore();
-  const data = await getData();
+  const { orders, refundRequests } = await getData();
+
   return (
-    <Card>
-      <CardHeader className="px-7">
-        <CardTitle>Orders</CardTitle>
-        <CardDescription>Recent orders from your store!</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Customer</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <p className="font-medium">{item.User?.firstName}</p>
-                  <p className="hidden md:flex text-sm text-muted-foreground">
-                    {item.User?.email}
-                  </p>
-                </TableCell>
-                <TableCell>Order</TableCell>
-                <TableCell>{item.status}</TableCell>
-                <TableCell>
-                  {new Intl.DateTimeFormat("en-US").format(item.createdAt)}
-                </TableCell>
-                <TableCell className="text-right">
-                  ${new Intl.NumberFormat("en-US").format(item.amount / 100)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
+        <p className="text-muted-foreground">
+          Manage orders and handle refund requests
+        </p>
+      </div>
+
+      <Tabs defaultValue="orders" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="orders">All Orders</TabsTrigger>
+          <TabsTrigger value="refunds">Refund Requests</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="orders" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrdersTable orders={orders} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="refunds" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Refund Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RefundRequestsTable refundRequests={refundRequests} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

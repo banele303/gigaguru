@@ -3,10 +3,46 @@ import prisma from "@/app/lib/db";
 import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 
+export const dynamic = "force-dynamic";
+
 async function getData(productId: string) {
   const data = await prisma.product.findUnique({
     where: {
       id: productId,
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      status: true,
+      price: true,
+      images: true,
+      category: true,
+      isFeatured: true,
+      sizes: true,
+      colors: true,
+      sku: true,
+      quantity: true,
+      reviews: {
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          productId: true,
+          userId: true,
+          updatedAt: true,
+          user: {
+            select: {
+              firstName: true,
+              profileImage: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
 
@@ -22,7 +58,6 @@ export default async function EditRoute({
 }: {
   params: { id: string };
 }) {
-  noStore();
   const data = await getData(params.id);
   return <EditForm data={data} />;
 }

@@ -1,60 +1,47 @@
-import prisma from "@/app/lib/db";
-import { LoadingProductCard, ProductCard } from "./ProductCard";
 import { Suspense } from "react";
+import prisma from "@/app/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
+import { FeaturedProductsClient, LoadingRows } from "./FeaturedProductsClient";
+import { Product } from "@/app/lib/zodSchemas";
 
-async function getData() {
+async function getData(): Promise<Product[]> {
+  noStore();
   const data = await prisma.product.findMany({
     where: {
-      status: "published",
       isFeatured: true,
+      status: "published"
     },
     select: {
       id: true,
       name: true,
       description: true,
-      images: true,
+      status: true,
       price: true,
-    },
-    orderBy: {
-      createdAt: "desc",
+      sku: true,
+      images: true,
+      category: true,
+      isFeatured: true,
+      quantity: true,
+      sizes: true,
+      colors: true,
+      brand: true,
+      material: true,
+      views: true,
+      createdAt: true,
+      updatedAt: true,
     },
     take: 3,
   });
-
   return data;
 }
 
-export function FeaturedProducts() {
-  return (
-    <>
-      <h2 className="text-2xl font-extrabold tracking-tight">Featured Items</h2>
-      <Suspense fallback={<LoadingRows />}>
-        <LoadFeaturedproducts />
-      </Suspense>
-    </>
-  );
-}
-
-async function LoadFeaturedproducts() {
-  noStore();
-  const data = await getData();
+// Server component wrapper (default export)
+export default async function FeaturedProducts() {
+  const products = await getData();
 
   return (
-    <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {data.map((item) => (
-        <ProductCard key={item.id} item={item} />
-      ))}
-    </div>
-  );
-}
-
-function LoadingRows() {
-  return (
-    <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <LoadingProductCard />
-      <LoadingProductCard />
-      <LoadingProductCard />
-    </div>
+    <Suspense fallback={<LoadingRows />}>
+      <FeaturedProductsClient products={products} />
+    </Suspense>
   );
 }

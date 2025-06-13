@@ -27,6 +27,16 @@ import { MoreHorizontal, PlusCircle, UserIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { formatPrice } from "@/app/lib/utils";
+
+type Product = {
+  id: string;
+  name: string;
+  images: string[];
+  status: string;
+  price: number;
+  createdAt: Date;
+};
 
 async function getData() {
   const data = await prisma.product.findMany({
@@ -71,7 +81,7 @@ export default async function ProductsRoute() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((item) => (
+              {data.map((item: Product) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <Image
@@ -84,7 +94,7 @@ export default async function ProductsRoute() {
                   </TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.status}</TableCell>
-                  <TableCell>${item.price}</TableCell>
+                  <TableCell>{formatPrice(item.price)}</TableCell>
                   <TableCell>
                     {new Intl.DateTimeFormat("en-US").format(item.createdAt)}
                   </TableCell>

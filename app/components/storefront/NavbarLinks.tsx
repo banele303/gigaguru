@@ -6,45 +6,68 @@ import { usePathname } from "next/navigation";
 
 export const navbarLinks = [
   {
-    id: 0,
-    name: "Home",
-    href: "/",
-  },
-  {
     id: 1,
-    name: "All Products",
-    href: "/products/all",
+    name: "All",
+    href: "/products",
   },
   {
     id: 2,
-    name: "Men",
-    href: "/products/men",
+    name: "Women",
+    href: "/products?category=women",
   },
   {
     id: 3,
-    name: "Women",
-    href: "/products/women",
+    name: "Men",
+    href: "/products?category=men",
   },
-  {
+    {
     id: 4,
     name: "Kids",
-    href: "/products/kids",
+    href: "/products?category=kids",
+  },
+  {
+    id: 5,
+    name: "Sports",
+    href: "/products?category=sports",
+  },
+ 
+  {
+    id: 7,
+    name: "Beauty",
+    href: "/products?category=beauty",
+  },
+  {
+    id: 8,
+    name: "Jewellery",
+    href: "/products?category=jewellery",
+  },
+  {
+    id: 9,
+    name: "Technology",
+    href: "/products?category=technology",
+  },
+  
+ 
+  {
+    id: 12,
+    name: "Sale",
+    href: "/products?category=sale",
   },
 ];
 
 export function NavbarLinks() {
   const location = usePathname();
   return (
-    <div className="hidden md:flex justify-center items-center gap-x-2 ml-8">
+    <div className="flex items-center gap-x-4">
       {navbarLinks.map((item) => (
         <Link
           href={item.href}
           key={item.id}
           className={cn(
             location === item.href
-              ? "bg-muted"
-              : "hover:bg-muted hover:bg-opacity-75",
-            "group p-2 font-medium rounded-md"
+              ? "text-primary font-semibold"
+              : "text-gray-600 hover:text-primary",
+            "text-sm font-medium transition-colors duration-200"
           )}
         >
           {item.name}

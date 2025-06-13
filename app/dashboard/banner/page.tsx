@@ -28,6 +28,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 
+type Banner = {
+  id: string;
+  title: string;
+  imageString: string;
+  createdAt: Date;
+};
+
 async function getData() {
   const data = await prisma.banner.findMany({
     orderBy: {
@@ -68,7 +75,7 @@ export default async function BannerRoute() {
             </TableHeader>
 
             <TableBody>
-              {data.map((item) => (
+              {data.map((item: Banner) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <Image

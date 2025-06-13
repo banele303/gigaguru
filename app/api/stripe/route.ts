@@ -24,11 +24,16 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       const session = event.data.object;
 
+      if (!session.metadata?.userId) {
+        console.error('User ID not found in session metadata');
+        return new Response('User ID not found', { status: 400 });
+      }
+
       await prisma.order.create({
         data: {
           amount: session.amount_total as number,
           status: session.status as string,
-          userId: session.metadata?.userId,
+          userId: session.metadata.userId,
         },
       });
 

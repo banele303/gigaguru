@@ -28,22 +28,68 @@ import { useFormState } from "react-dom";
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import { productSchema } from "@/app/lib/zodSchemas";
-import { useState } from "react";
-
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { categories } from "@/app/lib/categories";
 import { SubmitButton } from "@/app/components/SubmitButtons";
+import { Plus, X, Tag, Ruler, Palette } from "lucide-react";
+import { logFormSubmission } from "@/app/lib/debug";
+
+
 
 export default function ProductCreateRoute() {
   const [images, setImages] = useState<string[]>([]);
-  const [lastResult, action] = useFormState(createProduct, undefined);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [sizeInput, setSizeInput] = useState<string>("");
+  const [colorInput, setColorInput] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+
+  const handleAddSize = () => {
+    if (sizeInput && !selectedSizes.includes(sizeInput)) {
+      setSelectedSizes([...selectedSizes, sizeInput]);
+      setSizeInput(""); // Clear input after adding
+    }
+  };
+
+  const handleAddColor = () => {
+    if (colorInput && !selectedColors.includes(colorInput)) {
+      setSelectedColors([...selectedColors, colorInput]);
+      setColorInput(""); // Clear input after adding
+    }
+  };
+
+  const removeSize = (size: string) => {
+    setSelectedSizes(selectedSizes.filter(s => s !== size));
+  };
+
+  const removeColor = (color: string) => {
+    setSelectedColors(selectedColors.filter(c => c !== color));
+  };
+
+  const initialState = undefined;
+  const [lastResult, action] = useFormState(createProduct, initialState);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (lastResult && "message" in lastResult) {
+      if (lastResult.status === "success") {
+        toast.success(lastResult.message);
+        router.push("/dashboard/products");
+      } else if (lastResult.status === "error") {
+        toast.error(lastResult.message);
+      }
+    }
+  }, [lastResult, router]);
+
   const [form, fields] = useForm({
     lastResult,
-
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: productSchema });
     },
-
     shouldValidate: "onBlur",
     shouldRevalidate: "onInput",
   });
@@ -53,21 +99,29 @@ export default function ProductCreateRoute() {
   };
 
   return (
-    <form id={form.id} onSubmit={form.onSubmit} action={action}>
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
+    <form 
+      id={form.id} 
+      onSubmit={(e) => {
+        console.log("Form submit triggered");
+        logFormSubmission(e);
+        form.onSubmit(e);
+      }} 
+      action={action}
+    >
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="outline" size="icon" asChild className="rounded-full shadow-sm hover:shadow-md transition-shadow">
           <Link href="/dashboard/products">
             <ChevronLeft className="w-4 h-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold tracking-tight">New Product</h1>
+        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">New Product</h1>
       </div>
 
-      <Card className="mt-5">
-        <CardHeader>
-          <CardTitle>Product Details</CardTitle>
+      <Card className="mt-5 shadow-md border-0 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+          <CardTitle className="text-xl">Product Details</CardTitle>
           <CardDescription>
-            In this form you can create your product
+            Create a new product with all details
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -97,15 +151,39 @@ export default function ProductCreateRoute() {
               <p className="text-red-500">{fields.description.errors}</p>
             </div>
             <div className="flex flex-col gap-3">
+              <Label>SKU</Label>
+              <Input
+                type="text"
+                key={fields.sku?.key}
+                name="sku"
+                className="w-full"
+                placeholder="SKU-12345"
+              />
+              <p className="text-red-500">{fields.sku?.errors}</p>
+            </div>
+            <div className="flex flex-col gap-3">
               <Label>Price</Label>
               <Input
                 key={fields.price.key}
                 name={fields.price.name}
                 defaultValue={fields.price.initialValue}
                 type="number"
-                placeholder="$55"
+                placeholder="R55"
               />
               <p className="text-red-500">{fields.price.errors}</p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Label>Quantity</Label>
+              <Input
+                key={fields.quantity?.key}
+                name="quantity"
+                type="number"
+                min="0"
+                defaultValue="0"
+                placeholder="Available stock quantity"
+              />
+              <p className="text-red-500">{fields.quantity?.errors}</p>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -113,7 +191,7 @@ export default function ProductCreateRoute() {
               <Switch
                 key={fields.isFeatured.key}
                 name={fields.isFeatured.name}
-                defaultValue={fields.isFeatured.initialValue}
+                defaultChecked={Boolean(fields.isFeatured.initialValue)}
               />
               <p className="text-red-500">{fields.isFeatured.errors}</p>
             </div>
@@ -123,7 +201,7 @@ export default function ProductCreateRoute() {
               <Select
                 key={fields.status.key}
                 name={fields.status.name}
-                defaultValue={fields.status.initialValue}
+                defaultValue={fields.status.initialValue as string}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Status" />
@@ -138,14 +216,83 @@ export default function ProductCreateRoute() {
             </div>
 
             <div className="flex flex-col gap-3">
+              <Label>Sizes</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  placeholder="Enter a size"
+                  value={sizeInput}
+                  onChange={(e) => setSizeInput(e.target.value)}
+                  className="flex-grow"
+                />
+                <Button type="button" onClick={handleAddSize}>
+                  Add
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedSizes.map((size) => (
+                  <div key={size} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
+                    {size}
+                    <button type="button" onClick={() => removeSize(size)} className="text-gray-500 hover:text-red-500">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-red-500">{fields.sizes?.errors}</p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Label>Colors</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  placeholder="Enter a color"
+                  value={colorInput}
+                  onChange={(e) => setColorInput(e.target.value)}
+                  className="flex-grow"
+                />
+                <Button type="button" onClick={handleAddColor}>
+                  Add
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedColors.map((color) => (
+                  <div key={color} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
+                    <div 
+                      className="h-3 w-3 rounded-full mr-1" 
+                      style={{ 
+                        backgroundColor: color.toLowerCase(), 
+                        border: color.toLowerCase() === 'white' ? '1px solid #ddd' : 'none' 
+                      }} 
+                    />
+                    {color}
+                    <button 
+                      type="button" 
+                      onClick={() => removeColor(color)} 
+                      className="text-gray-500 hover:text-red-500"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-red-500">{fields.colors?.errors}</p>
+            </div>
+
+            <div className="flex flex-col gap-3">
               <Label>Category</Label>
               <Select
                 key={fields.category.key}
                 name={fields.category.name}
                 defaultValue={fields.category.initialValue}
+                onValueChange={(value) => {
+                  setSelectedCategory(value);
+                  setSelectedSubcategory("");
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
@@ -158,15 +305,33 @@ export default function ProductCreateRoute() {
               <p className="text-red-500">{fields.category.errors}</p>
             </div>
 
+            {selectedCategory && (
+              <div className="flex flex-col gap-3">
+                <Label>Subcategory</Label>
+                <Select
+                  name="subcategory"
+                  value={selectedSubcategory}
+                  onValueChange={setSelectedSubcategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories
+                      .find((cat) => cat.name === selectedCategory)
+                      ?.subcategories.map((subcat) => (
+                        <SelectItem key={subcat} value={subcat}>
+                          {subcat}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
               <Label>Images</Label>
-              <input
-                type="hidden"
-                value={images}
-                key={fields.images.key}
-                name={fields.images.name}
-                defaultValue={fields.images.initialValue as any}
-              />
+              {/* Don't need a hidden input here as we'll use individual hidden inputs in CardFooter */}
               {images.length > 0 ? (
                 <div className="flex gap-5">
                   {images.map((image, index) => (
@@ -205,7 +370,17 @@ export default function ProductCreateRoute() {
             </div>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex justify-end">
+          {/* Hidden inputs for form submission */}
+          {images.map((image, index) => (
+            <input type="hidden" name="images" key={`image-footer-${index}`} value={image} />
+          ))}
+          {selectedSizes.map((size) => (
+            <input type="hidden" name="sizes" key={`size-footer-${size}`} value={size} />
+          ))}
+          {selectedColors.map((color) => (
+            <input type="hidden" name="colors" key={`color-footer-${color}`} value={color} />
+          ))}
           <SubmitButton text="Create Product" />
         </CardFooter>
       </Card>
