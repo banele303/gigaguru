@@ -32,7 +32,13 @@ async function getData(): Promise<Product[]> {
     },
     take: 3,
   });
-  return data;
+
+  // Transform the data to match the Zod schema
+  return data.map(product => ({
+    ...product,
+    brand: product.brand ?? undefined,
+    material: product.material ?? undefined
+  }));
 }
 
 // Server component wrapper (default export)
