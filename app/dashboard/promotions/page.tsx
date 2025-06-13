@@ -25,8 +25,7 @@ async function getData() {
     prisma.flashSale.findMany({
       include: {
         products: {
-          select: {
-            discountPrice: true,
+          include: {
             product: {
               select: {
                 name: true,
