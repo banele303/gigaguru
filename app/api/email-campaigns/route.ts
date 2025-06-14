@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "@/lib/db";
+import prisma from "@/app/lib/db";
 import { resend } from "@/lib/resend";
 import { EmailCampaignWithRecipients, EmailCampaignRecipient } from "@/app/lib/zodSchemas";
 
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       return new NextResponse("Missing required fields or recipients", { status: 400 });
     }
 
-    const campaign = await db.emailCampaign.create({
+    const campaign = await prisma.emailCampaign.create({
       data: {
         name,
         subject,
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const campaigns = await db.emailCampaign.findMany({
+    const campaigns = await prisma.emailCampaign.findMany({
       where: {
         userId: user.id,
       },

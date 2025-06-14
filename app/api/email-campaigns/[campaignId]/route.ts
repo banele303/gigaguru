@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "@/lib/db";
+import prisma from "@/app/lib/db";
 import { EmailCampaignWithRecipients, EmailCampaignRecipient } from "@/app/lib/zodSchemas";
 
 export async function GET(
@@ -19,7 +19,7 @@ export async function GET(
       return new NextResponse("Campaign ID missing", { status: 400 });
     }
 
-    const campaign = await db.emailCampaign.findUnique({
+    const campaign = await prisma.emailCampaign.findUnique({
       where: {
         id: params.campaignId,
         userId: user.id,
@@ -74,7 +74,7 @@ export async function PATCH(
     }
 
     // Check if campaign exists and belongs to the user
-    const existingCampaign = await db.emailCampaign.findUnique({
+    const existingCampaign = await prisma.emailCampaign.findUnique({
       where: {
         id: params.campaignId,
         userId: user.id,
@@ -86,7 +86,7 @@ export async function PATCH(
     }
 
     // Update campaign details
-    const updatedCampaign = await db.emailCampaign.update({
+    const updatedCampaign = await prisma.emailCampaign.update({
       where: {
         id: params.campaignId,
       },
@@ -100,7 +100,7 @@ export async function PATCH(
     });
 
     // Update recipients (delete old and create new)
-    await db.emailCampaignRecipient.deleteMany({
+    await prisma.emailCampaignRecipient.deleteMany({
       where: {
         campaignId: updatedCampaign.id,
       },
@@ -112,7 +112,7 @@ export async function PATCH(
       status: "pending",
     }));
 
-    await db.emailCampaignRecipient.createMany({
+    await prisma.emailCampaignRecipient.createMany({
       data: recipientsData,
     });
 

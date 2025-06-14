@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "@/lib/db";
+import prisma from "@/app/lib/db";
 import { Refund } from "@/app/lib/zodSchemas";
 
 export async function GET(req: Request) {
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const refunds = await db.refundRequest.findMany({
+    const refunds = await prisma.refundRequest.findMany({
       where: {
         order: {
           userId: user.id

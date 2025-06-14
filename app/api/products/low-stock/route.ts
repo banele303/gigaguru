@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "@/lib/db";
+import prisma from "@/app/lib/db";
 import { Product } from "@/app/lib/zodSchemas";
 
 export async function GET(req: Request) {
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const lowStockProducts = await db.product.findMany({
+    const lowStockProducts = await prisma.product.findMany({
       where: {
         userId: user.id,
         quantity: {
