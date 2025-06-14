@@ -61,7 +61,7 @@ function ReviewForm({ productId }: { productId: string }) {
 
     if (!user) {
         return (
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+            <div className="mt-8 p-4 bg-muted rounded-lg">
                 <p className="text-center">Please sign in to leave a review</p>
             </div>
         );
@@ -86,7 +86,7 @@ function ReviewForm({ productId }: { productId: string }) {
             <h3 className="text-lg font-medium">Write a Review</h3>
             <input type="hidden" name="productId" value={productId} />
             <div>
-                <label htmlFor="rating" className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                <label htmlFor="rating" className="block text-sm font-medium text-foreground mb-1">Rating</label>
                 <StarRatings
                     rating={selectedRating}
                     starRatedColor="gold"
@@ -112,7 +112,7 @@ function ReviewForm({ productId }: { productId: string }) {
                 )}
             </div>
             <div>
-                <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">Review (optional)</label>
+                <label htmlFor="comment" className="block text-sm font-medium text-foreground mb-1">Review (optional)</label>
                 <Textarea 
                     id="comment" 
                     name="comment" 
@@ -135,7 +135,7 @@ function ReviewsList({ reviews }: { reviews: ProductClientProps['reviews'] }) {
   if (reviews.length === 0) {
     return (
       <div className="mt-8 text-center">
-        <p className="text-gray-500">No reviews yet. Be the first to review!</p>
+        <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
       </div>
     );
   }
@@ -147,7 +147,7 @@ function ReviewsList({ reviews }: { reviews: ProductClientProps['reviews'] }) {
         {reviews.map((review) => (
           <div key={review.id} className="border-b pb-6">
             <div className="flex items-start">
-              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                 {review.user.profileImage ? (
                   <Image 
                     src={review.user.profileImage} 
@@ -157,13 +157,13 @@ function ReviewsList({ reviews }: { reviews: ProductClientProps['reviews'] }) {
                     height={40}
                   />
                 ) : (
-                  <span className="text-gray-600 font-medium">{review.user.firstName?.[0]}{review.user.lastName?.[0]}</span>
+                  <span className="text-muted-foreground font-medium">{review.user.firstName?.[0]}{review.user.lastName?.[0]}</span>
                 )}
               </div>
               <div className="ml-4 flex-1">
                 <div className="flex items-center">
                   <h4 className="font-medium">{review.user.firstName} {review.user.lastName}</h4>
-                  <span className="mx-2 text-gray-400">•</span>
+                  <span className="mx-2 text-muted-foreground">•</span>
                   <StarRatings
                     rating={Number(review.rating) || 0}
                     starRatedColor="gold"
@@ -173,8 +173,8 @@ function ReviewsList({ reviews }: { reviews: ProductClientProps['reviews'] }) {
                     starSpacing="1px"
                   />
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                {review.comment && <p className="mt-2 text-gray-700">{review.comment}</p>}
+                <p className="text-sm text-muted-foreground mt-1">{new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                {review.comment && <p className="mt-2 text-foreground">{review.comment}</p>}
               </div>
             </div>
           </div>
@@ -256,7 +256,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
           starDimension="20px"
           starSpacing="2px"
         />
-        <span className="ml-2 text-sm text-gray-600">{validRating.toFixed(1)} ({reviewCount} reviews)</span>
+        <span className="ml-2 text-sm text-muted-foreground">{validRating.toFixed(1)} ({reviewCount} reviews)</span>
       </div>
     );
   };
@@ -265,9 +265,9 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
     <div className="flex flex-col gap-y-6">
       {/* Product Header */}
       <div>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">{product.name}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{product.name}</h1>
         <div className="mt-3 flex items-center justify-between">
-          <p className="text-2xl md:text-3xl font-medium text-gray-900">{formatPrice(product.price)}</p>
+          <p className="text-2xl md:text-3xl font-medium text-foreground">{formatPrice(product.price)}</p>
           <div className="flex items-center gap-x-2">
             {renderStars(averageRating)}
           </div>
@@ -280,7 +280,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
       </div>
 
       {/* Product Description */}
-      <div className="prose prose-base text-gray-600 max-w-none">
+      <div className="prose prose-base text-muted-foreground max-w-none">
         <p>{product.description}</p>
       </div>
 
@@ -289,7 +289,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
         {/* Sizes */}
         {product.sizes?.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-base font-semibold text-gray-800">Size</h3>
+            <h3 className="text-base font-semibold text-foreground">Size</h3>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((size: string) => (
                 <button
@@ -299,7 +299,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
                     selectedSize === size
                       ? 'bg-indigo-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                   }`}
                 >
                   {size}
@@ -312,7 +312,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
         {/* Colors */}
         {product.colors?.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-base font-semibold text-gray-800">Color</h3>
+            <h3 className="text-base font-semibold text-foreground">Color</h3>
             <div className="flex flex-wrap gap-3">
               {product.colors.map((color: string) => (
                 <button
@@ -320,7 +320,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
                   type="button"
                   onClick={() => setSelectedColor(color)}
                   className={`relative h-8 w-8 rounded-full border-2 transition-transform duration-200 transform hover:scale-110 focus:outline-none ${
-                    selectedColor === color ? 'border-indigo-600 ring-2 ring-offset-2 ring-indigo-500' : 'border-gray-300'
+                    selectedColor === color ? 'border-indigo-600 ring-2 ring-offset-2 ring-indigo-500' : 'border'
                   }`}
                   style={{ backgroundColor: color.toLowerCase() }}
                   title={color}
@@ -339,20 +339,20 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
         {/* Quantity and Add to Cart */}
         <div className="flex items-center gap-4 pt-4 border-t">
           {/* Quantity Selector */}
-          <div className="flex items-center rounded-lg border border-gray-300">
+          <div className="flex items-center rounded-lg border">
             <button
               type="button"
               onClick={() => setQuantity(p => Math.max(p - 1, 1))}
-              className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors disabled:opacity-50"
+              className="px-3 py-2 text-muted-foreground hover:bg-secondary rounded-l-lg transition-colors disabled:opacity-50"
               disabled={quantity <= 1}
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="w-12 text-center font-semibold text-gray-900">{quantity}</span>
+            <span className="w-12 text-center font-semibold text-foreground">{quantity}</span>
             <button
               type="button"
               onClick={() => setQuantity(p => Math.min(p + 1, 10))}
-              className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors disabled:opacity-50"
+              className="px-3 py-2 text-muted-foreground hover:bg-secondary rounded-r-lg transition-colors disabled:opacity-50"
               disabled={quantity >= 10}
             >
               <Plus className="h-4 w-4" />

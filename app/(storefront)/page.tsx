@@ -55,9 +55,9 @@ async function getFeaturedProducts(): Promise<Product[]> {
 function LoadingState() {
   return (
     <div className="animate-pulse">
-      <div className="h-[600px] bg-gray-200 mb-8" />
-      <div className="h-32 bg-gray-200 mb-8" />
-      <div className="h-96 bg-gray-200" />
+      <div className="h-[600px] bg-muted mb-8" />
+      <div className="h-32 bg-muted mb-8" />
+      <div className="h-96 bg-muted" />
     </div>
   );
 }
