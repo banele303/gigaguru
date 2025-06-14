@@ -1,6 +1,6 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { unstable_noStore as noStore } from "next/cache";
-import { db } from "@/app/lib/db";
+import prisma from "@/app/lib/db";
 import EmailCampaignsClient from "./client";
 
 type EmailCampaignWithRecipients = {
@@ -32,7 +32,7 @@ async function getData() {
     return { campaigns: [] }; // Handle unauthorized access gracefully
   }
 
-  const campaigns = await db.emailCampaign.findMany({
+  const campaigns = await prisma.emailCampaign.findMany({
     where: {
       userId: user.id,
     },
