@@ -1,9 +1,8 @@
-import { db as prisma } from "@/lib/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/app/lib/utils";
 
-type OrderWithUser = {
+export type OrderWithUser = {
   id: string;
   amount: number;
   user: {
@@ -13,36 +12,7 @@ type OrderWithUser = {
   } | null;
 };
 
-async function getData(): Promise<OrderWithUser[]> {
-  try {
-    const data = await prisma.order.findMany({
-      select: {
-        amount: true,
-        id: true,
-        user: {
-          select: {
-            firstName: true,
-            profileImage: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 7,
-    });
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching recent sales:", error);
-    return [];
-  }
-}
-
-export async function RecentSales() {
-  const data = await getData();
-
+export function RecentSales({ data }: { data: OrderWithUser[] }) {
   return (
     <Card>
       <CardHeader>

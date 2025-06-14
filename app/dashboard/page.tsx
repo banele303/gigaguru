@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
-import { RecentSales } from "../components/dashboard/RecentSales";
+import { RecentSales, OrderWithUser } from "../components/dashboard/RecentSales";
 import { Chart } from "../components/dashboard/Chart";
 import { MostViewedProducts } from "../components/dashboard/MostViewedProducts";
 import { CategoryDistribution } from "../components/dashboard/CategoryDistribution";
@@ -56,7 +56,7 @@ async function getData() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(now.getDate() - 7);
 
-  const [transactionData, mostViewedProducts, categoryData] = await Promise.all([
+  const [transactionData, mostViewedProducts, categoryData, recentSales] = await Promise.all([
     // Transaction data
     prisma.order.findMany({
       where: {
@@ -94,6 +94,25 @@ async function getData() {
         category: true,
       },
     }),
+
+    // Recent sales
+    prisma.order.findMany({
+      select: {
+        amount: true,
+        id: true,
+        user: {
+          select: {
+            firstName: true,
+            profileImage: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 7,
+    }),
   ]);
 
   const transactionResult = transactionData.map((item: TransactionData): TransactionResult => ({
@@ -118,12 +137,13 @@ async function getData() {
     transactionResult,
     mostViewedProductsResult,
     categoryDistributionResult,
+    recentSales: recentSales as OrderWithUser[],
   };
 }
 
 export default async function Dashboard() {
   noStore();
-  const { transactionResult, mostViewedProductsResult, categoryDistributionResult } = await getData();
+  const { transactionResult, mostViewedProductsResult, categoryDistributionResult, recentSales } = await getData();
 
   return (
     <>
@@ -142,7 +162,7 @@ export default async function Dashboard() {
           </CardContent>
         </Card>
 
-        <RecentSales />
+        <RecentSales data={recentSales} />
       </div>
 
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 mt-10">

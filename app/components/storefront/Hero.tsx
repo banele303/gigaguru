@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/db";
 import {
   Carousel,
   CarouselContent,
@@ -8,30 +7,13 @@ import {
 } from "@/components/ui/carousel";
 import Image from "next/image";
 
-interface BannerData {
+export interface BannerData {
   id: string;
   title: string;
   imageString: string;
 }
 
-async function getData(): Promise<BannerData[]> {
-  const data = await prisma.banner.findMany({
-    select: {
-      id: true,
-      title: true,
-      imageString: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  return data;
-}
-
-export async function Hero() {
-  const data = await getData();
-
+export function Hero({ data }: { data: BannerData[] }) {
   return (
     <Carousel>
       <CarouselContent>

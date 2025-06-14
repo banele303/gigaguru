@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import ProductClient from "./product-client";
 import FeaturedProducts from "@/app/components/storefront/FeaturedProducts";
 import type { Category, ProductStatus } from "@prisma/client";
+import { Product } from "@/app/lib/zodSchemas";
 
 export interface Review {
   id: string;
@@ -84,6 +85,37 @@ async function getProductData(productId: string) {
   }
 }
 
+async function getFeaturedProducts(): Promise<Product[]> {
+  noStore();
+  const data = await prisma.product.findMany({
+    where: {
+      isFeatured: true,
+      status: "published",
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      status: true,
+      price: true,
+      sku: true,
+      images: true,
+      category: true,
+      isFeatured: true,
+      quantity: true,
+      sizes: true,
+      colors: true,
+      brand: true,
+      material: true,
+      views: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    take: 3,
+  });
+  return data;
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -92,6 +124,7 @@ export default async function ProductPage({
   const { product, reviews, averageRating, reviewCount } = await getProductData(
     params.id
   );
+  const featuredProducts = await getFeaturedProducts();
 
   return (
     <>
@@ -102,7 +135,7 @@ export default async function ProductPage({
         reviewCount={reviewCount}
       />
       <div className="mt-16">
-        <FeaturedProducts />
+        <FeaturedProducts products={featuredProducts} />
       </div>
     </>
   );

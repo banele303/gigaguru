@@ -1,3 +1,5 @@
+"use client";
+
 import { deleteProduct } from "@/app/actions";
 import { SubmitButton } from "@/app/components/SubmitButtons";
 import { Button } from "@/components/ui/button";
