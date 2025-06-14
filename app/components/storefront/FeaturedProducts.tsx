@@ -33,12 +33,8 @@ async function getData(): Promise<Product[]> {
     take: 3,
   });
 
-  // Transform the data to match the Zod schema
-  return data.map(product => ({
-    ...product,
-    brand: product.brand ?? undefined,
-    material: product.material ?? undefined
-  }));
+  // Return the data directly since it already matches the Zod schema
+  return data;
 }
 
 // Server component wrapper (default export)
