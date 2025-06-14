@@ -42,7 +42,11 @@ if (typeof window !== "undefined") {
 export default posthog;
 
 export interface AnalyticsData {
-  pageViews: number;
+  pageViews: Array<{
+    date: string;
+    views: number;
+    uniqueVisitors: number;
+  }>;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
