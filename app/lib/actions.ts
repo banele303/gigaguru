@@ -238,11 +238,6 @@ export async function getProductById(id: string) {
         id,
       },
       include: {
-        ProductCategory: {
-          include: {
-            category: true,
-          },
-        },
         flashSaleProducts: {
           include: {
             flashSale: true,
