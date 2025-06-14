@@ -1,86 +1,102 @@
 import posthog from 'posthog-js';
 
 if (typeof window !== "undefined") {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
-    loaded: (posthog) => {
-      if (process.env.NODE_ENV === "development") posthog.debug();
-    },
-    capture_pageview: true,
-    capture_pageleave: true,
-    autocapture: true,
-    disable_session_recording: true,
-    disable_persistence: false,
-    disable_cookie: false,
-    xhr_headers: {
-      "Content-Type": "application/json",
-    },
-    on_xhr_error: (failedRequest) => {
-      // Silently handle blocked requests
-      console.debug("PostHog request blocked:", failedRequest);
-    },
-  });
+  try {
+    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
+      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
+      loaded: (posthog) => {
+        if (process.env.NODE_ENV === "development") posthog.debug();
+      },
+      capture_pageview: true,
+      capture_pageleave: true,
+      autocapture: true,
+      disable_session_recording: true,
+      disable_persistence: false,
+      disable_cookie: false,
+      xhr_headers: {
+        "Content-Type": "application/json",
+      },
+      on_xhr_error: (failedRequest) => {
+        // Silently handle blocked requests
+        console.debug("PostHog request blocked:", failedRequest);
+      },
+      bootstrap: {
+        distinctID: undefined,
+        isIdentifiedID: false,
+      },
+      persistence: "localStorage",
+      persistence_name: "ph_" + (process.env.NEXT_PUBLIC_POSTHOG_KEY || "").substring(0, 6),
+      disable_session_recording: true,
+      advanced_disable_decide: true,
+      loaded: (posthog) => {
+        if (process.env.NODE_ENV === "development") {
+          posthog.debug();
+        }
+      },
+    });
+  } catch (error) {
+    console.debug("PostHog initialization failed:", error);
+  }
 }
 
 export default posthog;
 
 export interface AnalyticsData {
-  pageViews: {
-    date: string;
+  pageViews: number;
+  uniqueVisitors: number;
+  averageTimeOnSite: number;
+  bounceRate: number;
+  topPages: Array<{
+    path: string;
     views: number;
-    uniqueVisitors: number;
-    avgTimeOnPage: number;
-  }[];
-  userActivity: {
-    action: string;
+  }>;
+  topReferrers: Array<{
+    source: string;
+    count: number;
+  }>;
+  deviceTypes: Array<{
+    type: string;
+    count: number;
+  }>;
+  browserTypes: Array<{
+    type: string;
+    count: number;
+  }>;
+  operatingSystems: Array<{
+    type: string;
+    count: number;
+  }>;
+  userRetention: Array<{
+    date: string;
+    returningUsers: number;
+    newUsers: number;
+  }>;
+  conversionFunnel: Array<{
+    step: string;
+    count: number;
+    dropoff: number;
+  }>;
+  revenueMetrics: {
+    totalRevenue: number;
+    averageOrderValue: number;
+    revenueByProduct: Array<{
+      productId: string;
+      revenue: number;
+    }>;
+  };
+  userBehavior: {
+    averageSessionDuration: number;
+    pagesPerSession: number;
+    exitPages: Array<{
+      path: string;
+      count: number;
+    }>;
+  };
+  searchAnalytics: Array<{
+    term: string;
     count: number;
     conversionRate: number;
-  }[];
-  userDemographics: {
-    country: string;
-    users: number;
-    percentage: number;
-  }[];
-  deviceStats: {
-    device: string;
-    users: number;
-    percentage: number;
-  }[];
-  topProducts: {
-    id: string;
-    name: string;
-    views: number;
-    purchases: number;
-    revenue: number;
-  }[];
-  funnelData: {
-    step: string;
-    users: number;
-    dropoff: number;
-  }[];
-  revenueData: {
-    date: string;
-    revenue: number;
-    orders: number;
-    averageOrderValue: number;
-  }[];
-  userRetention: {
-    cohort: string;
-    day0: number;
-    day1: number;
-    day7: number;
-    day30: number;
-  }[];
-  searchAnalytics: {
-    term: string;
-    searches: number;
-    results: number;
-    conversionRate: number;
-  }[];
-  totalRevenue: number;
-  revenueGrowth: number;
-  activeUsers: number;
-  userGrowth: number;
+  }>;
 }
 
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
