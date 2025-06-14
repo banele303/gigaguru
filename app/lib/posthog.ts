@@ -47,6 +47,12 @@ export interface AnalyticsData {
     views: number;
     uniqueVisitors: number;
   }>;
+  revenueData: Array<{
+    date: string;
+    revenue: number;
+    orders: number;
+    averageOrderValue: number;
+  }>;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
