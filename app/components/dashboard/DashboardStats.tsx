@@ -2,7 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, PartyPopper, ShoppingBag, User2 } from "lucide-react";
 import { formatPrice } from "@/app/lib/utils";
 import { getData } from "@/app/lib/actions";
-import { Order } from "@prisma/client";
+
+// Define the Order type locally instead of importing from Prisma
+type Order = {
+  amount: number;
+};
 
 export async function DashboardStats() {
   const { products, user, order } = await getData();

@@ -1,8 +1,7 @@
-import { prisma } from "@/lib/db";
+import { db as prisma } from "@/lib/db";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/app/lib/utils";
-import type { Prisma } from "@prisma/client";
 
 type OrderWithUser = {
   id: string;
