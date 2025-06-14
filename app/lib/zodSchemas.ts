@@ -13,11 +13,18 @@ export const productSchema = z.object({
   quantity: z.coerce.number().min(0, "Quantity cannot be negative").default(0),
   sizes: z.array(z.string()).optional().default([]),
   colors: z.array(z.string()).optional().default([]),
-  brand: z.string().nullable(),
-  material: z.string().nullable(),
+  brand: z.string().optional().nullable(),
+  material: z.string().optional().nullable(),
   views: z.number().default(0),
   createdAt: z.date(),
   updatedAt: z.date()
+});
+
+export const createProductSchema = productSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  views: true,
 });
 
 export const reviewSchema = z.object({

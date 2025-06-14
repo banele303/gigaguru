@@ -27,7 +27,7 @@ import Link from "next/link";
 import { useFormState } from "react-dom";
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
-import { productSchema } from "@/app/lib/zodSchemas";
+import { createProductSchema } from "@/app/lib/zodSchemas";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -88,7 +88,10 @@ export default function ProductCreateRoute() {
   const [form, fields] = useForm({
     lastResult,
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema: productSchema });
+      console.log("Form validation started");
+      const result = parseWithZod(formData, { schema: createProductSchema });
+      console.log("Validation result:", result);
+      return result;
     },
     shouldValidate: "onBlur",
     shouldRevalidate: "onInput",
@@ -101,13 +104,48 @@ export default function ProductCreateRoute() {
   return (
     <form 
       id={form.id} 
-      onSubmit={(e) => {
-        console.log("Form submit triggered");
-        logFormSubmission(e);
-        form.onSubmit(e);
-      }} 
-      action={action}
+      action={async (formData: FormData) => {
+        console.log("Form action started");
+        console.log("Form data:", Object.fromEntries(formData.entries()));
+        console.log("Images:", images);
+        
+        // Add images to formData
+        images.forEach((image, index) => {
+          formData.append("images", image);
+        });
+        
+        // Add sizes to formData
+        selectedSizes.forEach((size) => {
+          formData.append("sizes", size);
+        });
+        
+        // Add colors to formData
+        selectedColors.forEach((color) => {
+          formData.append("colors", color);
+        });
+        
+        const result = await createProduct(null, formData);
+        console.log("Form submission result:", result);
+        
+        if (result.status === "success") {
+          toast.success(result.message);
+          router.push("/dashboard/products");
+        } else {
+          toast.error(result.message);
+        }
+      }}
     >
+      {/* Hidden inputs for form data */}
+      {images.map((image, index) => (
+        <input type="hidden" name="images" key={`image-${index}`} value={image} />
+      ))}
+      {selectedSizes.map((size) => (
+        <input type="hidden" name="sizes" key={`size-${size}`} value={size} />
+      ))}
+      {selectedColors.map((color) => (
+        <input type="hidden" name="colors" key={`color-${color}`} value={color} />
+      ))}
+      
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" size="icon" asChild className="rounded-full shadow-sm hover:shadow-md transition-shadow">
           <Link href="/dashboard/products">
@@ -126,20 +164,35 @@ export default function ProductCreateRoute() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <Label>Name</Label>
-              <Input
-                type="text"
-                key={fields.name.key}
-                name={fields.name.name}
-                defaultValue={fields.name.initialValue}
-                className="w-full"
-                placeholder="Product Name"
-              />
+            {/* Basic Information Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-3">
+                <Label>Name</Label>
+                <Input
+                  type="text"
+                  key={fields.name.key}
+                  name={fields.name.name}
+                  defaultValue={fields.name.initialValue}
+                  className="w-full"
+                  placeholder="Product Name"
+                />
+                <p className="text-red-500">{fields.name.errors}</p>
+              </div>
 
-              <p className="text-red-500">{fields.name.errors}</p>
+              <div className="flex flex-col gap-3">
+                <Label>SKU</Label>
+                <Input
+                  type="text"
+                  key={fields.sku?.key}
+                  name="sku"
+                  className="w-full"
+                  placeholder="SKU-12345"
+                />
+                <p className="text-red-500">{fields.sku?.errors}</p>
+              </div>
             </div>
 
+            {/* Description Section */}
             <div className="flex flex-col gap-3">
               <Label>Description</Label>
               <Textarea
@@ -147,46 +200,100 @@ export default function ProductCreateRoute() {
                 name={fields.description.name}
                 defaultValue={fields.description.initialValue}
                 placeholder="Write your description right here..."
+                className="min-h-[100px]"
               />
               <p className="text-red-500">{fields.description.errors}</p>
             </div>
-            <div className="flex flex-col gap-3">
-              <Label>SKU</Label>
-              <Input
-                type="text"
-                key={fields.sku?.key}
-                name="sku"
-                className="w-full"
-                placeholder="SKU-12345"
-              />
-              <p className="text-red-500">{fields.sku?.errors}</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label>Price</Label>
-              <Input
-                key={fields.price.key}
-                name={fields.price.name}
-                defaultValue={fields.price.initialValue}
-                type="number"
-                placeholder="R55"
-              />
-              <p className="text-red-500">{fields.price.errors}</p>
+
+            {/* Pricing and Stock Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-3">
+                <Label>Price</Label>
+                <Input
+                  key={fields.price.key}
+                  name={fields.price.name}
+                  defaultValue={fields.price.initialValue}
+                  type="number"
+                  placeholder="R55"
+                />
+                <p className="text-red-500">{fields.price.errors}</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Label>Quantity</Label>
+                <Input
+                  key={fields.quantity?.key}
+                  name="quantity"
+                  type="number"
+                  min="0"
+                  defaultValue="0"
+                  placeholder="Available stock quantity"
+                />
+                <p className="text-red-500">{fields.quantity?.errors}</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Label>Brand</Label>
+                <Input
+                  type="text"
+                  name="brand"
+                  className="w-full"
+                  placeholder="Enter brand name"
+                />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <Label>Quantity</Label>
-              <Input
-                key={fields.quantity?.key}
-                name="quantity"
-                type="number"
-                min="0"
-                defaultValue="0"
-                placeholder="Available stock quantity"
-              />
-              <p className="text-red-500">{fields.quantity?.errors}</p>
+            {/* Category and Status Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-3">
+                <Label>Category</Label>
+                <Select
+                  key={fields.category.key}
+                  name={fields.category.name}
+                  defaultValue={fields.category.initialValue as string}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="men">Men</SelectItem>
+                    <SelectItem value="women">Women</SelectItem>
+                    <SelectItem value="kids">Kids</SelectItem>
+                    <SelectItem value="sports">Sports</SelectItem>
+                    <SelectItem value="home">Home</SelectItem>
+                    <SelectItem value="beauty">Beauty</SelectItem>
+                    <SelectItem value="jewellery">Jewellery</SelectItem>
+                    <SelectItem value="technology">Technology</SelectItem>
+                    <SelectItem value="brands">Brands</SelectItem>
+                    <SelectItem value="deals">Deals</SelectItem>
+                    <SelectItem value="sale">Sale</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-red-500">{fields.category.errors}</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Label>Status</Label>
+                <Select
+                  key={fields.status.key}
+                  name={fields.status.name}
+                  defaultValue={fields.status.initialValue as string}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-red-500">{fields.status.errors}</p>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            {/* Featured Product Toggle */}
+            <div className="flex items-center gap-3">
               <Label>Featured Product</Label>
               <Switch
                 key={fields.isFeatured.key}
@@ -196,160 +303,93 @@ export default function ProductCreateRoute() {
               <p className="text-red-500">{fields.isFeatured.errors}</p>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <Label>Status</Label>
-              <Select
-                key={fields.status.key}
-                name={fields.status.name}
-                defaultValue={fields.status.initialValue as string}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-red-500">{fields.status.errors}</p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Label>Sizes</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  placeholder="Enter a size"
-                  value={sizeInput}
-                  onChange={(e) => setSizeInput(e.target.value)}
-                  className="flex-grow"
-                />
-                <Button type="button" onClick={handleAddSize}>
-                  Add
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedSizes.map((size) => (
-                  <div key={size} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
-                    {size}
-                    <button type="button" onClick={() => removeSize(size)} className="text-gray-500 hover:text-red-500">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <p className="text-red-500">{fields.sizes?.errors}</p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Label>Colors</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  placeholder="Enter a color"
-                  value={colorInput}
-                  onChange={(e) => setColorInput(e.target.value)}
-                  className="flex-grow"
-                />
-                <Button type="button" onClick={handleAddColor}>
-                  Add
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedColors.map((color) => (
-                  <div key={color} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
-                    <div 
-                      className="h-3 w-3 rounded-full mr-1" 
-                      style={{ 
-                        backgroundColor: color.toLowerCase(), 
-                        border: color.toLowerCase() === 'white' ? '1px solid #ddd' : 'none' 
-                      }} 
-                    />
-                    {color}
-                    <button 
-                      type="button" 
-                      onClick={() => removeColor(color)} 
-                      className="text-gray-500 hover:text-red-500"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <p className="text-red-500">{fields.colors?.errors}</p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Label>Category</Label>
-              <Select
-                key={fields.category.key}
-                name={fields.category.name}
-                defaultValue={fields.category.initialValue}
-                onValueChange={(value) => {
-                  setSelectedCategory(value);
-                  setSelectedSubcategory("");
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.name}>
-                      {category.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-red-500">{fields.category.errors}</p>
-            </div>
-
-            {selectedCategory && (
+            {/* Sizes and Colors Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-3">
-                <Label>Subcategory</Label>
-                <Select
-                  name="subcategory"
-                  value={selectedSubcategory}
-                  onValueChange={setSelectedSubcategory}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a subcategory" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories
-                      .find((cat) => cat.name === selectedCategory)
-                      ?.subcategories.map((subcat) => (
-                        <SelectItem key={subcat} value={subcat}>
-                          {subcat}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <Label>Sizes</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter a size"
+                    value={sizeInput}
+                    onChange={(e) => setSizeInput(e.target.value)}
+                    className="flex-grow"
+                  />
+                  <Button type="button" onClick={handleAddSize}>
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedSizes.map((size) => (
+                    <div key={size} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
+                      {size}
+                      <button type="button" onClick={() => removeSize(size)} className="text-gray-500 hover:text-red-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-red-500">{fields.sizes?.errors}</p>
               </div>
-            )}
 
+              <div className="flex flex-col gap-3">
+                <Label>Colors</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter a color"
+                    value={colorInput}
+                    onChange={(e) => setColorInput(e.target.value)}
+                    className="flex-grow"
+                  />
+                  <Button type="button" onClick={handleAddColor}>
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedColors.map((color) => (
+                    <div key={color} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
+                      <div 
+                        className="h-3 w-3 rounded-full mr-1" 
+                        style={{ 
+                          backgroundColor: color.toLowerCase(), 
+                          border: color.toLowerCase() === 'white' ? '1px solid #ddd' : 'none' 
+                        }} 
+                      />
+                      {color}
+                      <button 
+                        type="button" 
+                        onClick={() => removeColor(color)} 
+                        className="text-gray-500 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-red-500">{fields.colors?.errors}</p>
+              </div>
+            </div>
+
+            {/* Images Section */}
             <div className="flex flex-col gap-3">
               <Label>Images</Label>
-              {/* Don't need a hidden input here as we'll use individual hidden inputs in CardFooter */}
               {images.length > 0 ? (
-                <div className="flex gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {images.map((image, index) => (
-                    <div key={index} className="relative w-[100px] h-[100px]">
+                    <div key={index} className="relative aspect-square">
                       <Image
-                        height={100}
-                        width={100}
+                        fill
                         src={image}
                         alt="Product Image"
-                        className="w-full h-full object-cover rounded-lg border"
+                        className="object-cover rounded-lg"
                       />
-
                       <button
                         onClick={() => handleDelete(index)}
                         type="button"
-                        className="absolute -top-3 -right-3 bg-red-500 p-2 rounded-lg text-white"
+                        className="absolute -top-2 -right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600 transition-colors"
                       >
-                        <XIcon className="w-3 h-3" />
+                        <XIcon className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
@@ -361,26 +401,15 @@ export default function ProductCreateRoute() {
                     setImages(res.map((r) => r.url));
                   }}
                   onUploadError={() => {
-                    alert("Something went wrong");
+                    toast.error("Failed to upload image");
                   }}
                 />
               )}
-
               <p className="text-red-500">{fields.images.errors}</p>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end">
-          {/* Hidden inputs for form submission */}
-          {images.map((image, index) => (
-            <input type="hidden" name="images" key={`image-footer-${index}`} value={image} />
-          ))}
-          {selectedSizes.map((size) => (
-            <input type="hidden" name="sizes" key={`size-footer-${size}`} value={size} />
-          ))}
-          {selectedColors.map((color) => (
-            <input type="hidden" name="colors" key={`color-footer-${color}`} value={color} />
-          ))}
+        <CardFooter className="justify-end gap-4">
           <SubmitButton text="Create Product" />
         </CardFooter>
       </Card>

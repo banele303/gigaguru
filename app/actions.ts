@@ -4,7 +4,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { parse } from "@conform-to/dom";
 import { parseWithZod } from "@conform-to/zod";
-import { bannerSchema, productSchema, reviewSchema } from "./lib/zodSchemas";
+import { bannerSchema, createProductSchema, productSchema, reviewSchema } from "./lib/zodSchemas";
 import { prisma } from "@/lib/db";
 import { redis } from "./lib/redis";
 import { Cart } from "./lib/interfaces";
@@ -15,33 +15,39 @@ import { revalidateTag } from "next/cache";
 
 export async function createProduct(prevState: unknown, formData: FormData) {
   console.log("createProduct action started");
+  console.log("Form data received:", Object.fromEntries(formData.entries()));
   
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
+  console.log("User:", user?.email);
+
   if (!user || user.email !== "alexsouthflow2@gmail.com") {
     console.log("Authorization failed for create product");
-    return redirect("/");
-  }
-
-  console.log("Form data received:", Object.fromEntries(formData.entries()));
-  
-  const submission = parseWithZod(formData, {
-    schema: productSchema,
-  });
-
-  if (submission.status !== "success") {
-    console.log("Validation failed:", submission.error);
-    const errorMessages = Object.entries(submission.error ?? {}).map(([key, value]) => `${key}: ${value}`).join('\n');
     return {
       status: 'error' as const,
-      message: `Validation failed: ${errorMessages}`,
+      message: 'You are not authorized to create products.',
     };
   }
-  
-  console.log("Validation passed, submission value:", submission.value);
 
   try {
+    const submission = parseWithZod(formData, {
+      schema: createProductSchema,
+    });
+
+    console.log("Validation result:", submission);
+
+    if (submission.status !== "success") {
+      console.log("Validation failed:", submission.error);
+      const errorMessages = Object.entries(submission.error ?? {}).map(([key, value]) => `${key}: ${value}`).join('\n');
+      return {
+        status: 'error' as const,
+        message: `Validation failed: ${errorMessages}`,
+      };
+    }
+    
+    console.log("Validation passed, submission value:", submission.value);
+
     // Log all the submission values for debugging
     console.log("Submission values:", {
       name: submission.value.name,
@@ -55,7 +61,8 @@ export async function createProduct(prevState: unknown, formData: FormData) {
       sizes: submission.value.sizes,
       colors: submission.value.colors,
     });
-    await prisma.product.create({
+
+    const product = await prisma.product.create({
       data: {
         name: submission.value.name,
         description: submission.value.description,
@@ -68,11 +75,19 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         quantity: submission.value.quantity || 0,
         sizes: submission.value.sizes,
         colors: submission.value.colors,
+        brand: submission.value.brand || null,
+        material: submission.value.material || null,
         userId: user.id,
       },
     });
     
-    console.log("Product created successfully");
+    console.log("Product created successfully:", product);
+    revalidateTag("products");
+
+    return {
+      status: 'success' as const,
+      message: 'Product created successfully!',
+    };
   } catch (error) {
     console.error('Error creating product:', error);
     
@@ -93,15 +108,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
       status: 'error' as const,
       message: 'Failed to create product. Please try again.',
     };
-
   }
-
-  revalidateTag("products");
-
-  return {
-    status: 'success' as const,
-    message: 'Product created successfully!',
-  };
 }
 
 export async function editProduct(prevState: any, formData: FormData) {
