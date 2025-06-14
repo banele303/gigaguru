@@ -167,7 +167,6 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
         date: item.date,
         views: item.count,
         uniqueVisitors: item.unique_users,
-        avgTimeOnPage: item.avg_time_on_page || 0,
       })),
 
       userActivity: userActivity.result.map((item: any) => ({
@@ -179,21 +178,17 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
       userDemographics: userDemographics.result.map((item: any) => ({
         country: item.breakdown_value,
         users: item.count,
-        percentage: (item.count / userDemographics.result.reduce((acc: number, curr: any) => acc + curr.count, 0)) * 100,
       })),
 
       deviceStats: deviceStats.result.map((item: any) => ({
         device: item.breakdown_value,
         users: item.count,
-        percentage: (item.count / deviceStats.result.reduce((acc: number, curr: any) => acc + curr.count, 0)) * 100,
       })),
 
       topProducts: topProducts.result.map((item: any) => ({
-        id: item.breakdown_value,
         name: item.breakdown_value,
         views: item.count,
         purchases: item.purchase_count || 0,
-        revenue: item.revenue || 0,
       })),
 
       funnelData: funnelData.result.map((step: any, index: number, array: any[]) => ({
@@ -209,9 +204,41 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
         averageOrderValue: item.revenue ? item.revenue / item.count : 0,
       })),
 
-      // These metrics require more complex queries or are not directly available
-      userRetention: [],
-      searchAnalytics: [],
+      // Required properties from AnalyticsData interface
+      uniqueVisitors: pageViews.result.reduce((acc: number, curr: any) => acc + (curr.unique_users || 0), 0),
+      averageTimeOnSite: pageViews.result.reduce((acc: number, curr: any) => acc + (curr.avg_time_on_page || 0), 0) / pageViews.result.length,
+      bounceRate: 0, // This would need to be calculated from session data
+      topPages: pageViews.result.map((item: any) => ({
+        path: item.path || '/',
+        views: item.count,
+      })),
+      topReferrers: [], // This would need to be fetched from referrer data
+      deviceTypes: deviceStats.result.map((item: any) => ({
+        type: item.breakdown_value,
+        count: item.count,
+      })),
+      browserTypes: [], // This would need to be fetched from browser data
+      operatingSystems: [], // This would need to be fetched from OS data
+      userRetention: [], // This would need to be calculated from user session data
+      conversionFunnel: funnelData.result.map((step: any, index: number, array: any[]) => ({
+        step: step.name,
+        count: step.count,
+        dropoff: index === 0 ? 0 : array[index - 1].count - step.count,
+      })),
+      revenueMetrics: {
+        totalRevenue,
+        averageOrderValue: totalRevenue / (revenueData.result.reduce((acc: number, curr: any) => acc + curr.count, 0) || 1),
+        revenueByProduct: topProducts.result.map((item: any) => ({
+          productId: item.breakdown_value,
+          revenue: item.revenue || 0,
+        })),
+      },
+      userBehavior: {
+        averageSessionDuration: pageViews.result.reduce((acc: number, curr: any) => acc + (curr.avg_time_on_page || 0), 0) / pageViews.result.length,
+        pagesPerSession: pageViews.result.reduce((acc: number, curr: any) => acc + curr.count, 0) / (pageViews.result[0]?.unique_users || 1),
+        exitPages: [], // This would need to be calculated from session data
+      },
+      searchAnalytics: [], // This would need to be fetched from search data
 
       // Add Prisma metrics
       totalRevenue,
