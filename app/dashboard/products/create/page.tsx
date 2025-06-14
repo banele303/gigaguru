@@ -93,8 +93,8 @@ export default function ProductCreateRoute() {
       console.log("Validation result:", result);
       return result;
     },
-    shouldValidate: "onBlur",
-    shouldRevalidate: "onInput",
+    shouldValidate: "onSubmit",
+    shouldRevalidate: "onSubmit",
   });
 
   const handleDelete = (index: number) => {
@@ -104,48 +104,10 @@ export default function ProductCreateRoute() {
   return (
     <form 
       id={form.id} 
-      action={async (formData: FormData) => {
-        console.log("Form action started");
-        console.log("Form data:", Object.fromEntries(formData.entries()));
-        console.log("Images:", images);
-        
-        // Add images to formData
-        images.forEach((image, index) => {
-          formData.append("images", image);
-        });
-        
-        // Add sizes to formData
-        selectedSizes.forEach((size) => {
-          formData.append("sizes", size);
-        });
-        
-        // Add colors to formData
-        selectedColors.forEach((color) => {
-          formData.append("colors", color);
-        });
-        
-        const result = await createProduct(null, formData);
-        console.log("Form submission result:", result);
-        
-        if (result.status === "success") {
-          toast.success(result.message);
-          router.push("/dashboard/products");
-        } else {
-          toast.error(result.message);
-        }
-      }}
+      onSubmit={form.onSubmit}
+      action={action}
+      className="max-w-7xl mx-auto"
     >
-      {/* Hidden inputs for form data */}
-      {images.map((image, index) => (
-        <input type="hidden" name="images" key={`image-${index}`} value={image} />
-      ))}
-      {selectedSizes.map((size) => (
-        <input type="hidden" name="sizes" key={`size-${size}`} value={size} />
-      ))}
-      {selectedColors.map((color) => (
-        <input type="hidden" name="colors" key={`color-${color}`} value={color} />
-      ))}
-      
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" size="icon" asChild className="rounded-full shadow-sm hover:shadow-md transition-shadow">
           <Link href="/dashboard/products">
@@ -155,14 +117,14 @@ export default function ProductCreateRoute() {
         <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">New Product</h1>
       </div>
 
-      <Card className="mt-5 shadow-md border-0 overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+      <Card className="shadow-md border-0">
+        <CardHeader className="bg-gradient-to-r from-background to-muted border-b">
           <CardTitle className="text-xl">Product Details</CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             Create a new product with all details
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="flex flex-col gap-6">
             {/* Basic Information Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -409,7 +371,7 @@ export default function ProductCreateRoute() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="justify-end gap-4">
+        <CardFooter className="border-t bg-muted/50 p-6">
           <SubmitButton text="Create Product" />
         </CardFooter>
       </Card>

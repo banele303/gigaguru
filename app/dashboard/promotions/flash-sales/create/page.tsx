@@ -9,58 +9,92 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { toast } from "sonner";
+import { createFlashSale } from "@/app/actions";
+import { useFormState } from "react-dom";
+import { useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod";
+import { z } from "zod";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { prisma } from "@/lib/db";
+
+const flashSaleSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  startDate: z.date(),
+  endDate: z.date(),
+  discountPercentage: z.number().min(1).max(100),
+  productIds: z.array(z.string()).min(1, "Select at least one product"),
+});
 
 export default function CreateFlashSale() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+
+  // Fetch products on component mount
+  useState(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => setProducts(data.products))
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        toast.error("Failed to load products");
+      });
+  });
+
+  const [lastResult, action] = useFormState(createFlashSale, undefined);
+  const [form, fields] = useForm({
+    lastResult,
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: flashSaleSchema });
+    },
+    shouldValidate: "onSubmit",
+    shouldRevalidate: "onSubmit",
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const formData = new FormData(e.currentTarget);
-      const data = {
-        name: formData.get("name"),
-        description: formData.get("description"),
-        startDate: startDate?.toISOString(),
-        endDate: endDate?.toISOString(),
-        discountPercentage: formData.get("discountPercentage"),
-      };
-
-      // TODO: Add API call to create flash sale
-      console.log("Flash sale data:", data);
-      
-      toast.success("Flash sale created successfully!");
+    const formData = new FormData(e.currentTarget);
+    formData.append("productIds", JSON.stringify(selectedProducts));
+    formData.append("startDate", startDate?.toISOString() || "");
+    formData.append("endDate", endDate?.toISOString() || "");
+    
+    const result = await action(formData);
+    
+    if (result?.status === "success") {
+      toast.success(result.message);
       router.push("/dashboard/promotions/flash-sales");
-    } catch (error) {
-      toast.error("Failed to create flash sale");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+    } else if (result?.status === "error") {
+      toast.error(result.message);
     }
+  };
+
+  const toggleProduct = (productId: string) => {
+    setSelectedProducts((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Create Flash Sale</h1>
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-        >
+        <Button variant="outline" onClick={() => router.back()}>
           Back
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Flash Sale Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Flash Sale Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
@@ -77,7 +111,6 @@ export default function CreateFlashSale() {
                 id="description"
                 name="description"
                 placeholder="Enter flash sale description"
-                required
               />
             </div>
 
@@ -117,22 +150,58 @@ export default function CreateFlashSale() {
                 required
               />
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Flash Sale"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {products.map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center space-x-4 p-4 border rounded-lg"
+                  >
+                    <Checkbox
+                      id={product.id}
+                      checked={selectedProducts.includes(product.id)}
+                      onCheckedChange={() => toggleProduct(product.id)}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={product.id}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {product.name}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(product.price / 100)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end space-x-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">Create Flash Sale</Button>
+        </div>
+      </form>
     </div>
   );
 } 

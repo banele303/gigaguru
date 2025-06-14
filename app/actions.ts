@@ -119,7 +119,26 @@ export async function editProduct(prevState: any, formData: FormData) {
     return redirect("/");
   }
 
-  const submission = parseWithZod(formData, {
+  // Parse JSON strings from form data
+  const images = JSON.parse(formData.get("images") as string || "[]");
+  const sizes = JSON.parse(formData.get("sizes") as string || "[]");
+  const colors = JSON.parse(formData.get("colors") as string || "[]");
+
+  // Create a new FormData with parsed values
+  const parsedFormData = new FormData();
+  for (const [key, value] of formData.entries()) {
+    if (key === "images") {
+      parsedFormData.append(key, JSON.stringify(images));
+    } else if (key === "sizes") {
+      parsedFormData.append(key, JSON.stringify(sizes));
+    } else if (key === "colors") {
+      parsedFormData.append(key, JSON.stringify(colors));
+    } else {
+      parsedFormData.append(key, value as string);
+    }
+  }
+
+  const submission = parseWithZod(parsedFormData, {
     schema: productSchema,
   });
 
@@ -133,24 +152,24 @@ export async function editProduct(prevState: any, formData: FormData) {
     await prisma.product.update({
       where: { id: productId },
       data: {
-          name: submission.value.name,
-          description: submission.value.description,
-          status: submission.value.status,
-          price: submission.value.price,
-          images: submission.value.images,
-          category: submission.value.category,
-          isFeatured: submission.value.isFeatured ?? false,
-          sku: submission.value.sku,
-          quantity: submission.value.quantity || 0,
-          sizes: Array.isArray(submission.value.sizes) ? submission.value.sizes : [],
-          colors: Array.isArray(submission.value.colors) ? submission.value.colors : [],
+        name: submission.value.name,
+        description: submission.value.description,
+        status: submission.value.status,
+        price: submission.value.price,
+        images: images,
+        category: submission.value.category,
+        isFeatured: submission.value.isFeatured ?? false,
+        sku: submission.value.sku,
+        quantity: submission.value.quantity || 0,
+        sizes: sizes,
+        colors: colors,
       },
     });
   } catch (error) {
-      console.error('Error editing product:', error);
-      return submission.reply({
-          formErrors: ["Failed to edit product."],
-      });
+    console.error('Error editing product:', error);
+    return submission.reply({
+      formErrors: ["Failed to edit product."],
+    });
   }
 
   revalidateTag("products");
@@ -620,5 +639,77 @@ export async function checkOut() {
   } catch (error) {
     console.error("Error in checkOut:", error);
     return redirect("/bag?error=unexpected");
+  }
+}
+
+export async function createFlashSale(prevState: unknown, formData: FormData) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user || user.email !== "alexsouthflow2@gmail.com") {
+    return {
+      status: 'error' as const,
+      message: 'You are not authorized to create flash sales.',
+    };
+  }
+
+  try {
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const startDate = new Date(formData.get("startDate") as string);
+    const endDate = new Date(formData.get("endDate") as string);
+    const discountPercentage = parseInt(formData.get("discountPercentage") as string);
+    const productIds = JSON.parse(formData.get("productIds") as string || "[]");
+
+    if (!name || !startDate || !endDate || !discountPercentage) {
+      return {
+        status: 'error' as const,
+        message: 'Please fill in all required fields.',
+      };
+    }
+
+    if (startDate >= endDate) {
+      return {
+        status: 'error' as const,
+        message: 'End date must be after start date.',
+      };
+    }
+
+    if (discountPercentage < 1 || discountPercentage > 100) {
+      return {
+        status: 'error' as const,
+        message: 'Discount percentage must be between 1 and 100.',
+      };
+    }
+
+    const flashSale = await prisma.flashSale.create({
+      data: {
+        name,
+        description,
+        startDate,
+        endDate,
+        isActive: true,
+        products: {
+          create: productIds.map((productId: string) => ({
+            productId,
+            discountPercentage,
+          })),
+        },
+      },
+    });
+
+    revalidateTag("products");
+    revalidatePath("/dashboard/promotions/flash-sales");
+
+    return {
+      status: 'success' as const,
+      message: 'Flash sale created successfully!',
+    };
+  } catch (error) {
+    console.error('Error creating flash sale:', error);
+    return {
+      status: 'error' as const,
+      message: 'Failed to create flash sale. Please try again.',
+    };
   }
 }

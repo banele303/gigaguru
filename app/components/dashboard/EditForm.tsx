@@ -123,13 +123,11 @@ export function EditForm({ data }: iAppProps) {
   }, [reviewState]);
   const [form, fields] = useForm({
     lastResult,
-
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: productSchema });
     },
-
-    shouldValidate: "onBlur",
-    shouldRevalidate: "onInput",
+    shouldValidate: "onSubmit",
+    shouldRevalidate: "onSubmit",
   });
 
   const handleDelete = (index: number) => {
@@ -236,10 +234,8 @@ export function EditForm({ data }: iAppProps) {
                 <div className="flex flex-col gap-3">
                   <input
                     type="hidden"
-                    value={images}
-                    key={fields.images.key}
                     name={fields.images.name}
-                    defaultValue={fields.images.initialValue as any}
+                    value={JSON.stringify(images)}
                   />
                   {images.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -391,9 +387,11 @@ export function EditForm({ data }: iAppProps) {
                       </div>
                     ))}
                   </div>
-                  {selectedSizes.map((size) => (
-                    <input type="hidden" name="sizes" key={size} value={size} />
-                  ))}
+                  <input
+                    type="hidden"
+                    name="sizes"
+                    value={JSON.stringify(selectedSizes)}
+                  />
                   <p className="text-red-500">{fields.sizes?.errors}</p>
                 </div>
 
@@ -459,14 +457,11 @@ export function EditForm({ data }: iAppProps) {
                       </div>
                     ))}
                   </div>
-                  {selectedColors.map((color) => (
-                    <input
-                      type="hidden"
-                      name="colors"
-                      key={color}
-                      value={color}
-                    />
-                  ))}
+                  <input
+                    type="hidden"
+                    name="colors"
+                    value={JSON.stringify(selectedColors)}
+                  />
                   <p className="text-red-500">{fields.colors?.errors}</p>
                 </div>
               </CardContent>
