@@ -1,9 +1,12 @@
+"use client";
+
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import Link from "next/link";
 
-export default function SuccessRoute() {
+function SuccessContent() {
   return (
     <section className="w-full min-h-[80vh] flex items-center justify-center">
       <Card className="w-[350px]">
@@ -28,5 +31,26 @@ export default function SuccessRoute() {
         </div>
       </Card>
     </section>
+  );
+}
+
+export default function SuccessRoute() {
+  return (
+    <Suspense fallback={
+      <section className="w-full min-h-[80vh] flex items-center justify-center">
+        <Card className="w-[350px]">
+          <div className="p-6">
+            <div className="animate-pulse">
+              <div className="w-12 h-12 rounded-full bg-gray-200 mx-auto" />
+              <div className="h-4 bg-gray-200 rounded mt-3 w-3/4 mx-auto" />
+              <div className="h-3 bg-gray-200 rounded mt-2 w-full" />
+              <div className="h-10 bg-gray-200 rounded mt-5 w-full" />
+            </div>
+          </div>
+        </Card>
+      </section>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }

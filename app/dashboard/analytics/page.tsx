@@ -36,6 +36,8 @@ import { DateRangePicker } from "@/app/components/ui/date-range-picker";
 import { addDays } from "date-fns";
 import { DateRange } from "react-day-picker";
 
+export const dynamic = 'force-dynamic';
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export default function AnalyticsPage() {

@@ -1,3 +1,4 @@
+import './config';
 import { ReactNode } from "react";
 import { DashboardSidebarWrapper } from "../components/dashboard/DashboardSidebarWrapper";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
