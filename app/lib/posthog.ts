@@ -71,6 +71,11 @@ export interface AnalyticsData {
     views: number;
     purchases: number;
   }>;
+  funnelData: Array<{
+    step: string;
+    users: number;
+    dropoff: number;
+  }>;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
