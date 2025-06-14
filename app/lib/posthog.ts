@@ -66,6 +66,11 @@ export interface AnalyticsData {
     device: string;
     users: number;
   }>;
+  topProducts: Array<{
+    name: string;
+    views: number;
+    purchases: number;
+  }>;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
