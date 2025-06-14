@@ -11,15 +11,18 @@ import { PostHogProvider } from "@/components/providers/PostHogProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ShoeMarshal",
-  description: "Your one-stop shop for premium footwear",
+  title: "ShoeBlessed",
+  description: "Your one-stop shop for all your shoe needs",
 };
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>

@@ -1,3 +1,6 @@
+"use client";
+
+import { Suspense } from "react";
 import { checkOut, delItem } from "@/app/actions";
 import { ChceckoutButton, DeleteItem } from "@/app/components/SubmitButtons";
 import { Cart } from "@/app/lib/interfaces";
@@ -9,10 +12,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { formatPrice } from "@/app/lib/utils";
-
 import { redirect } from "next/navigation";
 
-export default async function BagRoute() {
+function LoadingState() {
+  return (
+    <div className="max-w-2xl mx-auto mt-10 min-h-[55vh]">
+      <div className="animate-pulse">
+        <div className="h-32 bg-gray-200 rounded-md mb-4" />
+        <div className="h-32 bg-gray-200 rounded-md mb-4" />
+        <div className="h-32 bg-gray-200 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+async function BagContent() {
   noStore();
   const { getUser } = getKindeServerSession();
   const user = await getUser();
@@ -90,5 +104,13 @@ export default async function BagRoute() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function BagRoute() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <BagContent />
+    </Suspense>
   );
 }
