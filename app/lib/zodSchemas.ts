@@ -13,8 +13,8 @@ export const productSchema = z.object({
   quantity: z.coerce.number().min(0, "Quantity cannot be negative").default(0),
   sizes: z.array(z.string()).optional().default([]),
   colors: z.array(z.string()).optional().default([]),
-  brand: z.string().optional(),
-  material: z.string().optional(),
+  brand: z.string().nullable(),
+  material: z.string().nullable(),
   views: z.number().default(0),
   createdAt: z.date(),
   updatedAt: z.date()
