@@ -1,6 +1,6 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { unstable_noStore as noStore } from "next/cache";
-import { db } from "@/lib/db";
+import { db } from "@/app/lib/db";
 import EmailCampaignsClient from "./client";
 
 type EmailCampaignWithRecipients = {
