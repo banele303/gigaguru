@@ -11,7 +11,7 @@ import { RecentSales } from "../components/dashboard/RecentSales";
 import { Chart } from "../components/dashboard/Chart";
 import { MostViewedProducts } from "../components/dashboard/MostViewedProducts";
 import { CategoryDistribution } from "../components/dashboard/CategoryDistribution";
-import prisma from "../lib/db";
+import { prisma } from "@/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
 type TransactionData = {

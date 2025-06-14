@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { parse } from "@conform-to/dom";
 import { parseWithZod } from "@conform-to/zod";
 import { bannerSchema, productSchema, reviewSchema } from "./lib/zodSchemas";
-import prisma from "./lib/db";
+import { prisma } from "@/lib/db";
 import { redis } from "./lib/redis";
 import { Cart } from "./lib/interfaces";
 import { revalidatePath } from "next/cache";

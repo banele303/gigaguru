@@ -1,4 +1,4 @@
-import prisma from "./db";
+import { prisma } from "@/lib/db";
 import { startOfDay, endOfDay, subDays, subMonths, format } from "date-fns";
 import { AnalyticsData } from "./posthog";
 
