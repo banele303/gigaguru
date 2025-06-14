@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { Navbar } from "../components/storefront/Navbar";
 import { Footer } from "../components/storefront/Footer";
 import { Toaster } from "sonner";
+import "./config";
 
 export default function StoreFrontLayout({
   children,
