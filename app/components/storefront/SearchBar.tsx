@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { PrismaClient } from "@prisma/client";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Search as SearchIcon } from "lucide-react";
 
 // Define Product interface based on component usage
 interface Product {
@@ -11,9 +13,6 @@ interface Product {
   name: string;
   images: string[];
 }
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Search as SearchIcon } from "lucide-react";
 
 export function SearchBar() {
   const [query, setQuery] = useState("");

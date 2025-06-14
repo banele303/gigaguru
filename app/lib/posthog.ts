@@ -1,5 +1,29 @@
 import posthog from 'posthog-js';
 
+if (typeof window !== "undefined") {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
+    loaded: (posthog) => {
+      if (process.env.NODE_ENV === "development") posthog.debug();
+    },
+    capture_pageview: true,
+    capture_pageleave: true,
+    autocapture: true,
+    disable_session_recording: true,
+    disable_persistence: false,
+    disable_cookie: false,
+    xhr_headers: {
+      "Content-Type": "application/json",
+    },
+    on_xhr_error: (failedRequest) => {
+      // Silently handle blocked requests
+      console.debug("PostHog request blocked:", failedRequest);
+    },
+  });
+}
+
+export default posthog;
+
 export interface AnalyticsData {
   pageViews: {
     date: string;

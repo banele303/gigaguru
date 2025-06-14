@@ -1,48 +1,35 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/app/lib/db";
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+const prisma = new PrismaClient();
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
   const query = searchParams.get("query");
 
   if (!query) {
-    return NextResponse.json({ error: "Query is required" }, { status: 400 });
+    return NextResponse.json([]);
   }
 
   try {
     const products = await prisma.product.findMany({
       where: {
-        status: "published",
-        OR: [
-          {
-            name: {
-              contains: query,
-              mode: "insensitive",
-            },
-          },
-          {
-            description: {
-              contains: query,
-              mode: "insensitive",
-            },
-          },
-          {
-            brand: {
-              contains: query,
-              mode: "insensitive",
-            },
-          },
-        ],
+        name: {
+          contains: query,
+          mode: "insensitive",
+        },
       },
-      take: 10, // Limit the number of results
+      select: {
+        id: true,
+        name: true,
+        images: true,
+      },
+      take: 5,
     });
 
     return NextResponse.json(products);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("Search error:", error);
+    return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
 }
