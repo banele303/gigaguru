@@ -20,7 +20,7 @@ import { formatPrice } from "@/app/lib/utils";
 import { useAnalytics } from "@/app/hooks/useAnalytics";
 import Image from 'next/image';
 
-import prisma from '@/app/lib/db';
+import { prisma } from "@/lib/db";
 
 // Self-contained type definitions to avoid environment issues with Prisma types.
 export interface Review {

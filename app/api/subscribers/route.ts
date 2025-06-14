@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/app/lib/db";
+import { prisma } from "@/lib/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 export async function GET(req: Request) {

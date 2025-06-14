@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomersTable } from "@/app/components/dashboard/customers/CustomersTable";
 import { PurchaseHistoryTable } from "@/app/components/dashboard/customers/PurchaseHistoryTable";
-import prisma from "@/app/lib/db";
+import { prisma } from "@/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
 type CustomerWithOrders = {

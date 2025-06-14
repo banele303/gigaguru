@@ -5,7 +5,7 @@ import { FlashSalesTable } from "@/app/components/dashboard/promotions/FlashSale
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
-import prisma from "@/app/lib/db";
+import { prisma } from "@/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
 async function getData() {

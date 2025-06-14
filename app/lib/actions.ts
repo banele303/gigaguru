@@ -1,4 +1,4 @@
-import prisma from "@/app/lib/db";
+import { prisma } from "@/lib/db";
 import { Order } from "@/app/lib/zodSchemas";
 import { revalidatePath } from "next/cache";
 

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrdersTable } from "@/app/components/dashboard/orders/OrdersTable";
 import { RefundRequestsTable } from "@/app/components/dashboard/orders/RefundRequestsTable";
-import prisma from "@/app/lib/db";
+import { prisma } from "@/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
 async function getData() {

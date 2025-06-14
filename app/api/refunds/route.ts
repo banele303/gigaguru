@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import prisma from "@/app/lib/db";
+import { prisma } from "@/lib/db";
 import { Refund } from "@/app/lib/zodSchemas";
 
 export async function GET(req: Request) {

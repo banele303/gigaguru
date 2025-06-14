@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import prisma from "@/app/lib/db";
+import { prisma } from "@/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 import { FeaturedProductsClient, LoadingRows } from "./FeaturedProductsClient";
 import { Product } from "@/app/lib/zodSchemas";
