@@ -76,6 +76,10 @@ export interface AnalyticsData {
     users: number;
     dropoff: number;
   }>;
+  totalRevenue: number;
+  revenueGrowth: number;
+  activeUsers: number;
+  userGrowth: number;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
