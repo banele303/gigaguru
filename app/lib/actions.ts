@@ -354,14 +354,14 @@ export async function updateOrderStatus(id: string, status: string) {
   }
 }
 
-export async function updateProductStatus(id: string, status: string) {
+export async function updateProductStatus(id: string, status: 'draft' | 'published' | 'archived') {
   try {
     const product = await prisma.product.update({
       where: {
         id,
       },
       data: {
-        status,
+        status: status as 'draft' | 'published' | 'archived',
       },
     });
 
