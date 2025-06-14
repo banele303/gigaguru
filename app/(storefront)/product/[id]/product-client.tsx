@@ -15,40 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import type { Category, ProductStatus } from '@/app/lib/prisma-types';
 import { formatPrice } from "@/app/lib/utils";
 import { useAnalytics } from "@/app/hooks/useAnalytics";
 import Image from 'next/image';
-
-// Self-contained type definitions to avoid environment issues with Prisma types.
-export interface Review {
-  id: string;
-  rating: number;
-  comment: string | null;
-  createdAt: Date;
-  user: {
-    firstName: string | null;
-    lastName: string | null;
-    profileImage: string | null;
-  };
-}
-
-export interface ProductWithReviews {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  images: string[];
-  isFeatured: boolean;
-  createdAt: Date;
-  status: ProductStatus;
-  category: Category;
-  sku: string;
-  sizes: string[];
-  colors: string[];
-  reviews: Review[];
-  quantity: number;
-}
+import type { ProductWithReviews, Review } from './page';
 
 interface ProductClientProps {
   product: ProductWithReviews;

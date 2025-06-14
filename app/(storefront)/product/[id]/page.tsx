@@ -1,8 +1,38 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
-import ProductClient, { ProductWithReviews } from "./product-client";
+import ProductClient from "./product-client";
 import FeaturedProducts from "@/app/components/storefront/FeaturedProducts";
+import type { Category, ProductStatus } from "@prisma/client";
+
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: Date;
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    profileImage: string | null;
+  };
+}
+
+export interface ProductWithReviews {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  images: string[];
+  isFeatured: boolean;
+  createdAt: Date;
+  status: ProductStatus;
+  category: Category;
+  sku: string;
+  sizes: string[];
+  colors: string[];
+  reviews: Review[];
+  quantity: number;
+}
 
 async function getProductData(productId: string) {
   noStore();
@@ -28,13 +58,12 @@ async function getProductData(productId: string) {
       notFound();
     }
 
-    // Ensure we have sizes and colors arrays even if they're empty
     const typedProduct = {
       ...product,
       sizes: product.sizes || [],
-      colors: product.colors || []
+      colors: product.colors || [],
     } as unknown as ProductWithReviews;
-    
+
     const reviews = typedProduct.reviews || [];
 
     const averageRating =
