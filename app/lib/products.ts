@@ -1,4 +1,4 @@
-import prisma from "./db";
+import { prisma } from "@/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 import { Product } from "./zodSchemas";
 
