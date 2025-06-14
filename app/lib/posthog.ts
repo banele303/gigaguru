@@ -26,7 +26,6 @@ if (typeof window !== "undefined") {
       },
       persistence: "localStorage",
       persistence_name: "ph_" + (process.env.NEXT_PUBLIC_POSTHOG_KEY || "").substring(0, 6),
-      disable_session_recording: true,
       advanced_disable_decide: true,
       loaded: (posthog) => {
         if (process.env.NODE_ENV === "development") {
