@@ -23,33 +23,27 @@ async function getBannerData(): Promise<BannerData[]> {
 
 async function getFeaturedProducts(): Promise<Product[]> {
   noStore();
-  const data = await prisma.product.findMany({
+  let featuredProducts = await prisma.product.findMany({
     where: {
       isFeatured: true,
       status: "published",
     },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      status: true,
-      price: true,
-      sku: true,
-      images: true,
-      category: true,
-      isFeatured: true,
-      quantity: true,
-      sizes: true,
-      colors: true,
-      brand: true,
-      material: true,
-      views: true,
-      createdAt: true,
-      updatedAt: true,
-    },
     take: 3,
   });
-  return data;
+
+  if (featuredProducts.length === 0) {
+    featuredProducts = await prisma.product.findMany({
+      where: {
+        status: "published",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 3,
+    });
+  }
+
+  return featuredProducts;
 }
 
 function LoadingState() {

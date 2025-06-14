@@ -16,10 +16,18 @@ export function FeaturedProductsClient({ products }: { products: Product[] }) {
             Discover our handpicked selection of premium footwear
           </p>
         </div>
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((item) => (
-            <ProductCard key={item.id} item={item} />
-          ))}
+        <div className="mt-10">
+          {products.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((item) => (
+                <ProductCard key={item.id} item={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <p className="text-lg text-gray-500">No products to display at the moment.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

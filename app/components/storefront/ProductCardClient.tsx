@@ -48,19 +48,15 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">{item.name}</h3>
-        <div className="flex items-center justify-between mt-3">
-          <span className="text-primary font-bold text-xl">
-            {formatPrice(item.price)}
-          </span>
-          <div className="flex gap-x-2">
-            <AddToCartButton product={item} />
-            <Button
-              asChild
-              className="bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all duration-200"
-            >
-              <Link href={`/product/${item.id}`}>View Details</Link>
-            </Button>
-          </div>
+        <p className="text-primary font-bold text-xl mt-2">{formatPrice(item.price)}</p>
+        <div className="flex gap-x-2 mt-4">
+          <AddToCartButton product={item} />
+          <Button
+            asChild
+            className="bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all duration-200"
+          >
+            <Link href={`/product/${item.id}`}>View Details</Link>
+          </Button>
         </div>
       </div>
     </div>

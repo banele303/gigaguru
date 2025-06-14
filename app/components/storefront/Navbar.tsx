@@ -19,6 +19,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+function AuthButtons() {
+  return (
+    <div className="flex items-center gap-4">
+      <Button variant="ghost" asChild>
+        <LoginLink>Sign in</LoginLink>
+      </Button>
+      <Button asChild>
+        <RegisterLink>Create Account</RegisterLink>
+      </Button>
+    </div>
+  );
+}
+
 export async function Navbar() {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
@@ -46,25 +59,15 @@ export async function Navbar() {
         <div className="flex items-center gap-4">
           <div className="hidden lg:flex items-center gap-4">
             {user ? (
-              <>
-                <UserDropdown
-                  email={user.email as string}
-                  name={user.given_name as string}
-                  userImage={
-                    user.picture ??
-                    `https://avatar.vercel.sh/${user.given_name}`
-                  }
-                />
-              </>
+              <UserDropdown
+                email={user.email as string}
+                name={user.given_name as string}
+                userImage={
+                  user.picture ?? `https://avatar.vercel.sh/${user.given_name}`
+                }
+              />
             ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <LoginLink>Sign in</LoginLink>
-                </Button>
-                <Button asChild>
-                  <RegisterLink>Create Account</RegisterLink>
-                </Button>
-              </>
+              <AuthButtons />
             )}
           </div>
 
@@ -86,6 +89,19 @@ export async function Navbar() {
                 </SheetHeader>
                 <div className="mt-4">
                   <NavbarLinks />
+                </div>
+                <div className="mt-4">
+                  {user ? (
+                     <UserDropdown
+                        email={user.email as string}
+                        name={user.given_name as string}
+                        userImage={
+                          user.picture ?? `https://avatar.vercel.sh/${user.given_name}`
+                        }
+                      />
+                  ) : (
+                    <AuthButtons />
+                  )}
                 </div>
                 <div className="mt-4 lg:hidden">
                   <SearchBar />

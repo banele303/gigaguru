@@ -69,7 +69,7 @@ export function SearchBar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            className="w-full rounded-full px-12 py-3 text-base"
+            className="w-full rounded-full px-12 py-3 text-base bg-white"
           />
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <SearchIcon className="h-5 w-5 text-gray-400" />

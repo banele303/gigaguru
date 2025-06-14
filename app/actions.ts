@@ -32,7 +32,11 @@ export async function createProduct(prevState: unknown, formData: FormData) {
 
   if (submission.status !== "success") {
     console.log("Validation failed:", submission.error);
-    return submission.reply();
+    const errorMessages = Object.entries(submission.error ?? {}).map(([key, value]) => `${key}: ${value}`).join('\n');
+    return {
+      status: 'error' as const,
+      message: `Validation failed: ${errorMessages}`,
+    };
   }
   
   console.log("Validation passed, submission value:", submission.value);
