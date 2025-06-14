@@ -53,6 +53,11 @@ export interface AnalyticsData {
     orders: number;
     averageOrderValue: number;
   }>;
+  userActivity: Array<{
+    action: string;
+    count: number;
+    conversionRate: number;
+  }>;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
