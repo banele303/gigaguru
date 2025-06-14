@@ -58,6 +58,10 @@ export interface AnalyticsData {
     count: number;
     conversionRate: number;
   }>;
+  userDemographics: Array<{
+    country: string;
+    users: number;
+  }>;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
