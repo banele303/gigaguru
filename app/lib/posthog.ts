@@ -62,6 +62,10 @@ export interface AnalyticsData {
     country: string;
     users: number;
   }>;
+  deviceStats: Array<{
+    device: string;
+    users: number;
+  }>;
   uniqueVisitors: number;
   averageTimeOnSite: number;
   bounceRate: number;
