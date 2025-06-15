@@ -38,6 +38,9 @@ model Product {
   description String
   status      ProductStatus @default(draft)
   price       Int
+  discountPrice Int?
+  isSale      Boolean @default(false)
+  saleEndDate DateTime?
   images      String[]
   category    Category
   isFeatured  Boolean       @default(false)

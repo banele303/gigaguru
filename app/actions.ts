@@ -128,6 +128,10 @@ export async function editProduct(prevState: any, formData: FormData) {
   const images = JSON.parse(formData.get("images") as string || "[]");
   const sizes = JSON.parse(formData.get("sizes") as string || "[]");
   const colors = JSON.parse(formData.get("colors") as string || "[]");
+  const isSale = formData.get("isSale") === "on"; // Check for 'on' for switch components
+  const discountPrice = formData.get("discountPrice") ? Number(formData.get("discountPrice")) : null;
+  const saleEndDateString = formData.get("saleEndDate") as string | null;
+  const saleEndDate = saleEndDateString ? new Date(saleEndDateString) : null;
 
   // Create a new FormData with parsed values
   const parsedFormData = new FormData();
@@ -138,6 +142,12 @@ export async function editProduct(prevState: any, formData: FormData) {
       parsedFormData.append(key, JSON.stringify(sizes));
     } else if (key === "colors") {
       parsedFormData.append(key, JSON.stringify(colors));
+    } else if (key === "isSale") {
+      parsedFormData.append(key, String(isSale));
+    } else if (key === "discountPrice") {
+      parsedFormData.append(key, String(discountPrice));
+    } else if (key === "saleEndDate") {
+      parsedFormData.append(key, String(saleEndDate));
     } else {
       parsedFormData.append(key, value as string);
     }
@@ -168,6 +178,9 @@ export async function editProduct(prevState: any, formData: FormData) {
         quantity: submission.value.quantity || 0,
         sizes: sizes,
         colors: colors,
+        discountPrice: submission.value.discountPrice || null,
+        isSale: submission.value.isSale ?? false,
+        saleEndDate: submission.value.saleEndDate || null,
       },
     });
   } catch (error) {
@@ -581,69 +594,64 @@ export async function delItem(formData: FormData) {
 }
 
 export async function checkOut() {
-  try {
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
 
-    if (!user) {
-      return redirect("/");
+  if (!user) {
+    return redirect("/api/auth/login");
+  }
+
+  try {
+    let cart: Cart | null = await redis.get(`cart-${user.id}`);
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      console.warn("Attempting to check out with empty cart");
+      return redirect("/bag?error=empty-cart");
     }
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+      cart.items.map((item) => ({
+        price_data: {
+          currency: "usd",
+          unit_amount: item.price * 100, // Assuming price is in cents
+          product_data: {
+            name: item.name,
+            images: [item.imageString || ''],
+          },
+        },
+        quantity: item.quantity || 1,
+      }));
 
     try {
-      let cart: Cart | null = await redis.get(`cart-${user.id}`);
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: lineItems,
+        success_url:
+          process.env.NODE_ENV === "development"
+            ? "http://localhost:3000/payment/success"
+            : "https://ecom-pro-coral.vercel.app/payment/success",
+        cancel_url:
+          process.env.NODE_ENV === "development"
+            ? "http://localhost:3000/payment/cancel"
+            : "https://ecom-pro-coral.vercel.app/payment/cancel",
+        metadata: {
+          userId: user.id,
+        },
+      });
 
-      if (!cart || !cart.items || cart.items.length === 0) {
-        console.warn("Attempting to check out with empty cart");
-        return redirect("/bag?error=empty-cart");
+      if (session && session.url) {
+        return redirect(session.url);
+      } else {
+        console.error("Stripe session created but no URL returned");
+        return redirect("/bag?error=checkout-failed");
       }
-
-      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
-        cart.items.map((item) => ({
-          price_data: {
-            currency: "usd",
-            unit_amount: item.price * 100,
-            product_data: {
-              name: item.name,
-              images: [item.imageString || ''],
-            },
-          },
-          quantity: item.quantity || 1,
-        }));
-
-      try {
-        const session = await stripe.checkout.sessions.create({
-          mode: "payment",
-          line_items: lineItems,
-          success_url:
-            process.env.NODE_ENV === "development"
-              ? "http://localhost:3000/payment/success"
-              : "https://ecom-pro-coral.vercel.app/payment/success",
-          cancel_url:
-            process.env.NODE_ENV === "development"
-              ? "http://localhost:3000/payment/cancel"
-              : "https://ecom-pro-coral.vercel.app/payment/cancel",
-          metadata: {
-            userId: user.id,
-          },
-        });
-
-        if (session && session.url) {
-          return redirect(session.url);
-        } else {
-          console.error("Stripe session created but no URL returned");
-          return redirect("/bag?error=checkout-failed");
-        }
-      } catch (stripeError) {
-        console.error("Stripe checkout error:", stripeError);
-        return redirect("/bag?error=payment-processing");
-      }
-    } catch (redisError) {
-      console.error("Redis error in checkOut:", redisError);
-      return redirect("/bag?error=cart-retrieval");
+    } catch (stripeError) {
+      console.error("Stripe checkout error:", stripeError);
+      return redirect("/bag?error=payment-processing");
     }
-  } catch (error) {
-    console.error("Error in checkOut:", error);
-    return redirect("/bag?error=unexpected");
+  } catch (redisError) {
+    console.error("Redis error in checkOut:", redisError);
+    return redirect("/bag?error=cart-retrieval");
   }
 }
 
@@ -676,9 +684,7 @@ export async function createFlashSale(prevState: unknown, formData: FormData): P
         isActive: true,
         products: {
           create: productIds.map(productId => ({
-            product: {
-              connect: { id: productId }
-            },
+            productId: productId,
             discountPrice: 0, // This will be calculated based on the product price and discount percentage
           }))
         }

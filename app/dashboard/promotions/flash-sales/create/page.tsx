@@ -195,7 +195,7 @@ export default function CreateFlashSale() {
                       <p className="text-sm text-muted-foreground">
                         {new Intl.NumberFormat("en-US", {
                           style: "currency",
-                          currency: "USD",
+                          currency: "ZAR",
                         }).format(product.price / 100)}
                       </p>
                     </div>

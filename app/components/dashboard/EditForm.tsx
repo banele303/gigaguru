@@ -34,6 +34,7 @@ import { useFormStatus } from "react-dom";
 import { parseWithZod } from "@conform-to/zod";
 import { productSchema } from "@/app/lib/zodSchemas";
 import { type Category, type ProductStatus, type CampaignStatus, type RecipientStatus } from "@/app/lib/prisma-types";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 // Define the Review type locally
 type Review = {
@@ -80,6 +81,9 @@ interface iAppProps {
       };
     })[];
     quantity: number;
+    discountPrice?: number;
+    isSale?: boolean;
+    saleEndDate?: Date;
   };
 }
 
@@ -91,6 +95,9 @@ export function EditForm({ data }: iAppProps) {
   const [customColor, setCustomColor] = useState<string>("");
   const sizesRef = useRef<HTMLSelectElement>(null);
   const colorsRef = useRef<HTMLSelectElement>(null);
+  const [discountPrice, setDiscountPrice] = useState<number | undefined>(data.discountPrice);
+  const [isSale, setIsSale] = useState<boolean>(data.isSale || false);
+  const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(data.saleEndDate);
 
   const handleCustomSizeAdd = () => {
     if (customSize && !selectedSizes.includes(customSize)) {
@@ -199,6 +206,20 @@ export function EditForm({ data }: iAppProps) {
                       <p className="text-red-500">{fields.price.errors}</p>
                     </div>
                     <div className="flex flex-col gap-3">
+                      <Label>Discount Price</Label>
+                      <Input
+                        type="number"
+                        key={fields.discountPrice?.key}
+                        name="discountPrice"
+                        defaultValue={data.discountPrice || ''}
+                        placeholder="R40"
+                        onChange={(e) => setDiscountPrice(Number(e.target.value))}
+                        disabled={!isSale}
+                        required={isSale}
+                      />
+                      <p className="text-red-500">{fields.discountPrice?.errors}</p>
+                    </div>
+                    <div className="flex flex-col gap-3">
                       <Label>Quantity</Label>
                       <Input
                         key={fields.quantity?.key}
@@ -209,6 +230,38 @@ export function EditForm({ data }: iAppProps) {
                         placeholder="Available stock quantity"
                       />
                       <p className="text-red-500">{fields.quantity?.errors}</p>
+                    </div>
+                  </div>
+
+                  {/* Sale Information Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="isSale">On Sale</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Mark this product as on sale.
+                        </p>
+                      </div>
+                      <Switch
+                        id="isSale"
+                        name={fields.isSale.name}
+                        checked={isSale}
+                        onCheckedChange={setIsSale}
+                      />
+                      <p className="text-red-500">{fields.isSale.errors}</p>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <Label htmlFor="saleEndDate">Sale End Date</Label>
+                      <DateTimePicker
+                        id="saleEndDate"
+                        name={fields.saleEndDate.name}
+                        value={saleEndDate}
+                        onChange={setSaleEndDate}
+                        required={isSale}
+                        className="w-full"
+                      />
+                      <p className="text-red-500">{fields.saleEndDate.errors}</p>
                     </div>
                   </div>
 

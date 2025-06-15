@@ -36,6 +36,7 @@ import { categories } from "@/app/lib/categories";
 import { SubmitButton } from "@/app/components/SubmitButtons";
 import { Plus, X, Tag, Ruler, Palette } from "lucide-react";
 import { logFormSubmission } from "@/app/lib/debug";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 
 
@@ -47,6 +48,9 @@ export default function ProductCreateRoute() {
   const [colorInput, setColorInput] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [isSale, setIsSale] = useState<boolean>(false);
+  const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(undefined);
+  const [discountPrice, setDiscountPrice] = useState<number | undefined>(undefined);
 
   const handleAddSize = () => {
     if (sizeInput && !selectedSizes.includes(sizeInput)) {
@@ -182,6 +186,20 @@ export default function ProductCreateRoute() {
               </div>
 
               <div className="flex flex-col gap-3">
+                <Label>Discount Price</Label>
+                <Input
+                  type="number"
+                  name={fields.discountPrice.name}
+                  defaultValue={fields.discountPrice.initialValue}
+                  placeholder="R40"
+                  onChange={(e) => setDiscountPrice(Number(e.target.value))}
+                  disabled={!isSale}
+                  required={isSale}
+                />
+                <p className="text-red-500">{fields.discountPrice.errors}</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
                 <Label>Quantity</Label>
                 <Input
                   key={fields.quantity?.key}
@@ -193,15 +211,37 @@ export default function ProductCreateRoute() {
                 />
                 <p className="text-red-500">{fields.quantity?.errors}</p>
               </div>
+            </div>
+
+            {/* Sale Information Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="isSale">On Sale</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Mark this product as on sale.
+                  </p>
+                </div>
+                <Switch
+                  id="isSale"
+                  name={fields.isSale.name}
+                  checked={isSale}
+                  onCheckedChange={setIsSale}
+                />
+                <p className="text-red-500">{fields.isSale.errors}</p>
+              </div>
 
               <div className="flex flex-col gap-3">
-                <Label>Brand</Label>
-                <Input
-                  type="text"
-                  name="brand"
+                <Label htmlFor="saleEndDate">Sale End Date</Label>
+                <DateTimePicker
+                  id="saleEndDate"
+                  name={fields.saleEndDate.name}
+                  value={saleEndDate}
+                  onChange={setSaleEndDate}
+                  required={isSale}
                   className="w-full"
-                  placeholder="Enter brand name"
                 />
+                <p className="text-red-500">{fields.saleEndDate.errors}</p>
               </div>
             </div>
 

@@ -75,6 +75,9 @@ export async function GET(req: NextRequest) {
         id: true,
         name: true,
         price: true,
+        discountPrice: true,
+        isSale: true,
+        saleEndDate: true,
         images: true,
       },
       orderBy: {

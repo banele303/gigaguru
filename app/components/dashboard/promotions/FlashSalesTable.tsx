@@ -86,7 +86,7 @@ export function FlashSalesTable({
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "ZAR",
     }).format(price / 100);
   };
 
