@@ -23,6 +23,9 @@ export interface ProductWithReviews {
   name: string;
   description: string;
   price: number;
+  discountPrice?: number | null;
+  isSale?: boolean;
+  saleEndDate?: Date | null;
   images: string[];
   isFeatured: boolean;
   createdAt: Date;
