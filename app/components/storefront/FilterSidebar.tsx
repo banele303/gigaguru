@@ -64,8 +64,8 @@ function FilterControls({
             name="category"
             onValueChange={(value) => handleSelectChange("category", value)}
           >
-            <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
-              <SelectValue placeholder="All Categories" />
+            <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900">
+              <SelectValue placeholder="All Categories" className="text-gray-900" />
             </SelectTrigger>
             <SelectContent className="bg-white">
               <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All Categories</SelectItem>
