@@ -27,6 +27,11 @@ const flashSaleSchema = z.object({
   productIds: z.array(z.string()).min(1, "Select at least one product"),
 });
 
+type FlashSaleResult = {
+  status: 'success' | 'error';
+  message: string;
+};
+
 export default function CreateFlashSale() {
   const router = useRouter();
   const [startDate, setStartDate] = useState<Date>();
@@ -45,7 +50,7 @@ export default function CreateFlashSale() {
       });
   });
 
-  const [lastResult, action] = useFormState(createFlashSale, undefined);
+  const [lastResult, action] = useFormState<FlashSaleResult, FormData>(createFlashSale, undefined);
   const [form, fields] = useForm({
     lastResult,
     onValidate({ formData }) {
