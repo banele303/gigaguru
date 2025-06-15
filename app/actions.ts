@@ -654,34 +654,14 @@ export async function createFlashSale(prevState: unknown, formData: FormData) {
   }
 
   try {
-    const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const startDate = new Date(formData.get("startDate") as string);
-    const endDate = new Date(formData.get("endDate") as string);
-    const discountPercentage = parseInt(formData.get("discountPercentage") as string);
-    const productIds = JSON.parse(formData.get("productIds") as string || "[]");
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const startDate = new Date(formData.get('startDate') as string);
+    const endDate = new Date(formData.get('endDate') as string);
+    const discountPercentage = parseInt(formData.get('discountPercentage') as string);
+    const productIds = JSON.parse(formData.get('productIds') as string) as string[];
 
-    if (!name || !startDate || !endDate || !discountPercentage) {
-      return {
-        status: 'error' as const,
-        message: 'Please fill in all required fields.',
-      };
-    }
-
-    if (startDate >= endDate) {
-      return {
-        status: 'error' as const,
-        message: 'End date must be after start date.',
-      };
-    }
-
-    if (discountPercentage < 1 || discountPercentage > 100) {
-      return {
-        status: 'error' as const,
-        message: 'Discount percentage must be between 1 and 100.',
-      };
-    }
-
+    // Create the flash sale
     const flashSale = await prisma.flashSale.create({
       data: {
         name,
@@ -690,17 +670,35 @@ export async function createFlashSale(prevState: unknown, formData: FormData) {
         endDate,
         isActive: true,
         products: {
-          create: productIds.map((productId: string) => ({
-            productId,
-            discountPercentage,
-          })),
-        },
+          create: productIds.map(productId => ({
+            product: {
+              connect: { id: productId }
+            },
+            discountPrice: 0, // This will be calculated based on the product price and discount percentage
+          }))
+        }
       },
+      include: {
+        products: {
+          include: {
+            product: true
+          }
+        }
+      }
     });
 
-    revalidateTag("products");
-    revalidatePath("/dashboard/promotions/flash-sales");
+    // Update the discount prices for each product
+    for (const flashSaleProduct of flashSale.products) {
+      const originalPrice = flashSaleProduct.product.price;
+      const discountPrice = Math.round(originalPrice * (1 - discountPercentage / 100));
+      
+      await prisma.flashSaleProduct.update({
+        where: { id: flashSaleProduct.id },
+        data: { discountPrice }
+      });
+    }
 
+    revalidateTag('flash-sales');
     return {
       status: 'success' as const,
       message: 'Flash sale created successfully!',
