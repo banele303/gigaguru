@@ -117,8 +117,8 @@ export function DashboardSidebar() {
           <Image
             src="/shoes/logo.png"
             alt="ShoeBlessed Logo"
-            width={80}
-            height={80}
+            width={180}
+            height={180}
             className="object-contain"
           />
         </Link>
