@@ -55,7 +55,10 @@ export default function CreateFlashSale() {
       });
   });
 
-  const [lastResult, action] = useFormState<FlashSaleResult, FormData>(createFlashSale, initialState);
+  const [lastResult, action] = useFormState<FlashSaleResult, FormData>(
+    (prevState: FlashSaleResult, formData: FormData) => createFlashSale(prevState, formData),
+    initialState
+  );
   const [form, fields] = useForm({
     lastResult,
     onValidate({ formData }) {
