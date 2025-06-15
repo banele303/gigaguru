@@ -49,10 +49,14 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
 
   const originalPrice = item.price;
   const discountedPrice = item.discountPrice;
-  const isCurrentlyOnSale = item.isSale && discountedPrice !== null && discountedPrice < originalPrice && timeLeft !== "Sale Ended";
+
+  // Explicitly ensure discountedPrice is a number for type safety
+  const numericDiscountPrice = typeof discountedPrice === 'number' ? discountedPrice : undefined;
+
+  const isCurrentlyOnSale = item.isSale && numericDiscountPrice != null && numericDiscountPrice < originalPrice && timeLeft !== "Sale Ended";
 
   const percentageOff = isCurrentlyOnSale
-    ? Math.round(((originalPrice - discountedPrice!) / originalPrice) * 100)
+    ? Math.round(((originalPrice - numericDiscountPrice) / originalPrice) * 100)
     : 0;
 
   return (
@@ -113,7 +117,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
         <div className="flex items-baseline gap-2 mt-2">
           {isCurrentlyOnSale ? (
             <>
-              <p className="text-primary font-bold text-xl">{formatPrice(discountedPrice!)}</p>
+              <p className="text-primary font-bold text-xl">{formatPrice(numericDiscountPrice!)}</p>
               <p className="text-muted-foreground line-through text-sm">{formatPrice(originalPrice)}</p>
             </>
           ) : (
