@@ -49,8 +49,8 @@ export async function Navbar() {
             <Image
               src="/shoes/logo.png"
               alt="ShoeBlessed Logo"
-              width={60}
-              height={60}
+              width={80}
+              height={80}
               className="object-contain"
             />
           </Link>
