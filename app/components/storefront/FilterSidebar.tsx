@@ -54,7 +54,7 @@ function FilterControls({
 
   return (
     <div className="p-4 space-y-6 bg-white rounded-lg shadow-lg">
-      <h3 className="text-xl font-semibold text-gray-800 border-b pb-2">
+      <h3 className="text-xl font-semibold text-gray-900 border-b pb-2">
         Filters
       </h3>
       <div className="space-y-4">
@@ -68,18 +68,18 @@ function FilterControls({
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent className="bg-white">
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="men">Men</SelectItem>
-              <SelectItem value="women">Women</SelectItem>
-              <SelectItem value="kids">Kids</SelectItem>
-              <SelectItem value="sports">Sports</SelectItem>
-              <SelectItem value="home">Home</SelectItem>
-              <SelectItem value="beauty">Beauty</SelectItem>
-              <SelectItem value="jewellery">Jewellery</SelectItem>
-              <SelectItem value="technology">Technology</SelectItem>
-              <SelectItem value="brands">Brands</SelectItem>
-              <SelectItem value="deals">Deals</SelectItem>
-              <SelectItem value="sale">Sale</SelectItem>
+              <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All Categories</SelectItem>
+              <SelectItem value="men" className="text-gray-900 hover:bg-gray-100">Men</SelectItem>
+              <SelectItem value="women" className="text-gray-900 hover:bg-gray-100">Women</SelectItem>
+              <SelectItem value="kids" className="text-gray-900 hover:bg-gray-100">Kids</SelectItem>
+              <SelectItem value="sports" className="text-gray-900 hover:bg-gray-100">Sports</SelectItem>
+              <SelectItem value="home" className="text-gray-900 hover:bg-gray-100">Home</SelectItem>
+              <SelectItem value="beauty" className="text-gray-900 hover:bg-gray-100">Beauty</SelectItem>
+              <SelectItem value="jewellery" className="text-gray-900 hover:bg-gray-100">Jewellery</SelectItem>
+              <SelectItem value="technology" className="text-gray-900 hover:bg-gray-100">Technology</SelectItem>
+              <SelectItem value="brands" className="text-gray-900 hover:bg-gray-100">Brands</SelectItem>
+              <SelectItem value="deals" className="text-gray-900 hover:bg-gray-100">Deals</SelectItem>
+              <SelectItem value="sale" className="text-gray-900 hover:bg-gray-100">Sale</SelectItem>
             </SelectContent>
           </Select>
         </div>
