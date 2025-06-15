@@ -115,13 +115,12 @@ export function DashboardSidebar() {
       <div className="flex h-24 items-center border-b px-4 sticky top-0 bg-background z-10">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
-            src="/logo.png"
+            src="/shoes/logo.png"
             alt="ShoeBlessed Logo"
-            width={32}
-            height={32}
+            width={80}
+            height={80}
             className="object-contain"
           />
-          <h2 className="text-lg font-semibold">Admin Dashboard</h2>
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-4">
