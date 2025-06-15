@@ -38,7 +38,7 @@ async function getData() {
         name: item.product.name,
         price: item.product.price,
       },
-      discountPrice: item.product.price * (1 - item.discountPercentage / 100),
+      discountPrice: item.discountPrice,
     })),
   }));
 
