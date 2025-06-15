@@ -23,7 +23,7 @@ import {
 function AuthButtons() {
   return (
     <div className="flex items-center gap-4">
-      <Button variant="ghost" asChild className="text-foreground hover:text-foreground/80">
+      <Button variant="secondary" asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
         <LoginLink>Sign in</LoginLink>
       </Button>
       <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -45,15 +45,14 @@ export async function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-white">
       <nav className="container mx-auto flex items-center justify-between p-4">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center">
             <Image
-              src="/logo.png"
+              src="/shoes/logo.png"
               alt="ShoeBlessed Logo"
               width={40}
               height={40}
               className="object-contain"
             />
-            <h1 className="text-2xl font-bold text-primary">ShoeBlessed</h1>
           </Link>
           <div className="hidden lg:block">
             <NavbarLinks />
