@@ -32,6 +32,11 @@ type FlashSaleResult = {
   message: string;
 };
 
+const initialState: FlashSaleResult = {
+  status: 'error',
+  message: '',
+};
+
 export default function CreateFlashSale() {
   const router = useRouter();
   const [startDate, setStartDate] = useState<Date>();
@@ -50,7 +55,7 @@ export default function CreateFlashSale() {
       });
   });
 
-  const [lastResult, action] = useFormState<FlashSaleResult, FormData>(createFlashSale, undefined);
+  const [lastResult, action] = useFormState<FlashSaleResult, FormData>(createFlashSale, initialState);
   const [form, fields] = useForm({
     lastResult,
     onValidate({ formData }) {
