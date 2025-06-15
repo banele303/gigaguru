@@ -77,13 +77,13 @@ export default function CreateFlashSale() {
     formData.append("startDate", startDate?.toISOString() || "");
     formData.append("endDate", endDate?.toISOString() || "");
     
-    const result = await action(formData);
+    await action(formData);
     
-    if (result && 'status' in result && result.status === "success") {
-      toast.success(result.message);
+    if (lastResult?.status === "success") {
+      toast.success(lastResult.message);
       router.push("/dashboard/promotions/flash-sales");
-    } else if (result && 'status' in result && result.status === "error") {
-      toast.error(result.message);
+    } else if (lastResult?.status === "error") {
+      toast.error(lastResult.message);
     }
   };
 
