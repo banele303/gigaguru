@@ -13,6 +13,11 @@ import { stripe } from "./lib/stripe";
 import Stripe from "stripe";
 import { revalidateTag } from "next/cache";
 
+type FlashSaleResult = {
+  status: 'success' | 'error';
+  message: string;
+};
+
 export async function createProduct(prevState: unknown, formData: FormData) {
   console.log("createProduct action started");
   console.log("Form data received:", Object.fromEntries(formData.entries()));
@@ -642,7 +647,7 @@ export async function checkOut() {
   }
 }
 
-export async function createFlashSale(prevState: unknown, formData: FormData) {
+export async function createFlashSale(prevState: unknown, formData: FormData): Promise<FlashSaleResult> {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
