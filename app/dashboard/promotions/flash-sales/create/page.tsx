@@ -37,6 +37,8 @@ const initialState: FlashSaleResult = {
   message: '',
 };
 
+type FormAction = (prevState: FlashSaleResult, formData: FormData) => Promise<FlashSaleResult>;
+
 export default function CreateFlashSale() {
   const router = useRouter();
   const [startDate, setStartDate] = useState<Date>();
@@ -56,7 +58,7 @@ export default function CreateFlashSale() {
   });
 
   const [lastResult, action] = useFormState<FlashSaleResult, FormData>(
-    (prevState: FlashSaleResult, formData: FormData) => createFlashSale(prevState, formData),
+    createFlashSale as FormAction,
     initialState
   );
   const [form, fields] = useForm({
@@ -77,10 +79,10 @@ export default function CreateFlashSale() {
     
     const result = await action(formData);
     
-    if (result?.status === "success") {
+    if (result && 'status' in result && result.status === "success") {
       toast.success(result.message);
       router.push("/dashboard/promotions/flash-sales");
-    } else if (result?.status === "error") {
+    } else if (result && 'status' in result && result.status === "error") {
       toast.error(result.message);
     }
   };
