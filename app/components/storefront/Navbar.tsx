@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { NavbarLinks } from "./NavbarLinks";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { Menu, ShoppingBagIcon } from "lucide-react";
@@ -44,7 +45,14 @@ export async function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-white">
       <nav className="container mx-auto flex items-center justify-between p-4">
         <div className="flex items-center gap-4">
-          <Link href="/">
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="ShoeBlessed Logo"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
             <h1 className="text-2xl font-bold text-primary">ShoeBlessed</h1>
           </Link>
           <div className="hidden lg:block">

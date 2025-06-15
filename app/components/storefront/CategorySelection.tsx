@@ -31,7 +31,11 @@ export function CategorySelection({
           key={category}
           variant={selectedCategory === category ? "default" : "outline"}
           onClick={() => onCategoryChange(category)}
-          className="capitalize w-full transition-transform transform hover:scale-105"
+          className={`capitalize w-full transition-transform transform hover:scale-105 ${
+            selectedCategory === category 
+              ? "bg-primary text-white hover:bg-primary/90" 
+              : "bg-white text-gray-900 hover:bg-gray-100 border-gray-200"
+          }`}
         >
           {category}
         </Button>

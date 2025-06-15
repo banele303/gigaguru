@@ -64,10 +64,10 @@ function FilterControls({
             name="category"
             onValueChange={(value) => handleSelectChange("category", value)}
           >
-            <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+            <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               <SelectItem value="all">All Categories</SelectItem>
               <SelectItem value="men">Men</SelectItem>
               <SelectItem value="women">Women</SelectItem>
@@ -93,7 +93,7 @@ function FilterControls({
             placeholder="e.g. Nike, Adidas"
             value={filters.brand}
             onChange={handleInputChange}
-            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
@@ -109,7 +109,7 @@ function FilterControls({
             placeholder="e.g. Leather, Canvas"
             value={filters.material}
             onChange={handleInputChange}
-            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
@@ -122,7 +122,7 @@ function FilterControls({
             placeholder="e.g. 10, 11.5"
             value={filters.size}
             onChange={handleInputChange}
-            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
@@ -135,7 +135,7 @@ function FilterControls({
             placeholder="e.g. Red, Blue"
             value={filters.color}
             onChange={handleInputChange}
-            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div className="flex gap-x-4 items-center">
@@ -153,7 +153,7 @@ function FilterControls({
               placeholder="0"
               value={filters.minPrice}
               onChange={handleInputChange}
-              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
           <div className="flex-1">
@@ -170,7 +170,7 @@ function FilterControls({
               placeholder="1000"
               value={filters.maxPrice}
               onChange={handleInputChange}
-              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
         </div>
