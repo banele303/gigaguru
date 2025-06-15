@@ -23,9 +23,9 @@ export interface ProductWithReviews {
   name: string;
   description: string;
   price: number;
-  discountPrice?: number | null;
-  isSale?: boolean;
-  saleEndDate?: Date | null;
+  discountPrice: number;
+  isSale: boolean;
+  saleEndDate: Date | null;
   images: string[];
   isFeatured: boolean;
   createdAt: Date;
@@ -46,10 +46,40 @@ async function getProductData(productId: string) {
         id: productId,
         status: "published",
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        status: true,
+        price: true,
+        discountPrice: true,
+        isSale: true,
+        saleEndDate: true,
+        sku: true,
+        images: true,
+        category: true,
+        isFeatured: true,
+        quantity: true,
+        sizes: true,
+        colors: true,
+        brand: true,
+        material: true,
+        views: true,
+        createdAt: true,
+        updatedAt: true,
         reviews: {
-          include: {
-            user: true,
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
           },
           orderBy: {
             createdAt: "desc",
@@ -66,7 +96,9 @@ async function getProductData(productId: string) {
       ...product,
       sizes: product.sizes || [],
       colors: product.colors || [],
-    } as unknown as ProductWithReviews;
+      discountPrice: product.discountPrice ?? 0,
+      isSale: product.isSale ?? false,
+    };
 
     const reviews = typedProduct.reviews || [];
 

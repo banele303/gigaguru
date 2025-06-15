@@ -267,7 +267,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
       <div>
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{product.name}</h1>
         <div className="mt-3 flex items-center justify-between">
-          {product.isSale && product.discountPrice !== null && product.discountPrice < product.price ? (
+          {product.isSale && product.discountPrice != null && product.discountPrice! < product.price ? (
             <div className="flex items-baseline gap-2">
               <p className="text-2xl md:text-3xl font-medium text-primary">{formatPrice(product.discountPrice)}</p>
               <p className="text-muted-foreground line-through text-lg">{formatPrice(product.price)}</p>
