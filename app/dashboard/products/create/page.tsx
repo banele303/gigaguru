@@ -445,20 +445,17 @@ export default function ProductCreateRoute() {
               <Label>Product Images</Label>
               {isUploadReady && (
                 <UploadDropzone
-                  endpoint="imageUploader"
                   onClientUploadComplete={(res) => {
-                    if (res) {
-                      const newImages = res.map((file) => file.url);
-                      setImages((prev) => [...prev, ...newImages]);
-                      toast.success("Images uploaded successfully");
-                    }
+                    setImages(res.map((file) => file.url));
+                    toast.success("Images uploaded successfully");
                   }}
-                  onUploadError={(error: Error) => {
-                    toast.error(`Error uploading images: ${error.message}`);
+                  onUploadError={(error) => {
+                    toast.error("Failed to upload images");
+                    console.error("Upload error:", error);
                   }}
+                  endpoint="productImageRoute"
                   config={{
-                    mode: "auto",
-                    maxFileSize: 10 * 1024 * 1024, // 10MB
+                    mode: "auto"
                   }}
                 />
               )}
