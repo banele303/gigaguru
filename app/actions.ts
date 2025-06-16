@@ -482,7 +482,7 @@ export async function createBanner(prevState: any, formData: FormData) {
 
     if (!user || user.email !== "alexsouthflow2@gmail.com") {
       return {
-        status: "error",
+        status: "error" as const,
         error: {
           _errors: ["Unauthorized"]
         }
@@ -507,13 +507,13 @@ export async function createBanner(prevState: any, formData: FormData) {
     });
 
     return {
-      status: "success",
+      status: "success" as const,
       banner
     };
   } catch (error) {
     console.error("Error creating banner:", error);
     return {
-      status: "error",
+      status: "error" as const,
       error: {
         _errors: ["Failed to create banner"]
       }
