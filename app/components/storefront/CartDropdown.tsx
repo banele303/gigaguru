@@ -9,6 +9,10 @@ import { formatPrice } from "@/app/lib/utils";
 import { updateCartItemQuantity, getCart, delItem, checkOut } from '@/app/actions';
 import type { CartItem } from '@/app/lib/interfaces';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCart } from "@/app/hooks/useCart";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { ChceckoutButton } from "@/app/components/SubmitButtons";
 
 interface CartDropdownProps {
   itemCount: number;
@@ -207,19 +211,8 @@ export function CartDropdown({ itemCount, items: initialItems, onClose }: CartDr
               </div>
             </div>
             <div className="mt-6 space-y-3">
-              <form action={async () => {
-                try {
-                  // Ensure cart is up to date before checkout
-                  await getCart();
-                  await checkOut();
-                } catch (error) {
-                  console.error("Checkout error:", error);
-                  toast.error("Failed to process checkout. Please try again.");
-                }
-              }}>
-                <Button type="submit" className="w-full">
-                  Checkout
-                </Button>
+              <form action={checkOut}>
+                <ChceckoutButton />
               </form>
               <Button variant="outline" asChild className="w-full">
                 <Link href="/bag" onClick={onClose}>View Bag</Link>

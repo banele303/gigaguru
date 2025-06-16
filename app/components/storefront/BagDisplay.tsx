@@ -14,6 +14,7 @@ import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { CartItem } from "@/app/lib/interfaces";
+import { useCart } from "@/app/hooks/useCart";
 
 interface BagDisplayProps {
   cart: Cart | null;
@@ -171,9 +172,7 @@ export function BagDisplay({ cart }: BagDisplayProps) {
 
             <div className="mt-6">
               <form action={checkOut}>
-                <Button type="submit" className="w-full">
-                  Checkout
-                </Button>
+                <ChceckoutButton />
               </form>
             </div>
           </div>
