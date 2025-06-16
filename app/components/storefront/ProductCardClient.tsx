@@ -125,7 +125,12 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
           )}
         </div>
         <div className="flex gap-x-2 mt-4">
-          <AddToCartButton product={item} />
+          {item.id && <AddToCartButton product={{
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            images: item.images
+          }} />}
           <Button
             asChild
             className="bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all duration-200"
