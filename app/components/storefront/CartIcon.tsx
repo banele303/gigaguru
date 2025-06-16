@@ -17,7 +17,7 @@ export function CartIcon() {
         ...item,
         imageUrl: item.imageString
       })));
-      const uniqueProducts = new Set(cart.items.map(item => item.productId));
+      const uniqueProducts = new Set(cart.items.map(item => item.id));
       setItemCount(uniqueProducts.size);
     }
   };
