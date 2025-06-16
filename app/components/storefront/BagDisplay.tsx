@@ -47,11 +47,12 @@ export function BagDisplay({ cart }: BagDisplayProps) {
 
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     try {
+      setIsUpdating(prev => ({ ...prev, [itemId]: true }));
       await updateCartItemQuantity(itemId, newQuantity);
     } catch (error) {
       console.error('Failed to update quantity:', error);
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(prev => ({ ...prev, [itemId]: false }));
     }
   };
 
