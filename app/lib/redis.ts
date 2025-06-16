@@ -25,7 +25,18 @@ export const redis = {
     }
     
     try {
-      return await redisClient.get(key);
+      const data = await redisClient.get(key);
+      if (data === null) return null;
+      
+      // Handle both string and object data
+      if (typeof data === 'string') {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          return data;
+        }
+      }
+      return data;
     } catch (error) {
       console.error(`Redis get error for key ${key}:`, error);
       return null;
@@ -39,7 +50,9 @@ export const redis = {
     }
     
     try {
-      return await redisClient.set(key, value);
+      // Serialize objects to JSON strings
+      const serializedValue = typeof value === 'object' ? JSON.stringify(value) : value;
+      return await redisClient.set(key, serializedValue);
     } catch (error) {
       console.error(`Redis set error for key ${key}:`, error);
       return null;
