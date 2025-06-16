@@ -48,13 +48,11 @@ export default function BannerRoute() {
 
   useEffect(() => {
     if (lastResult?.status === 'success') {
-      toast.success(lastResult.message);
+      toast.success('Banner created successfully');
       router.push("/dashboard/banner");
       router.refresh();
-    } else if (lastResult?.error) {
-      toast.error(lastResult.error);
-    } else if (lastResult?.status === 'error') {
-      toast.error(lastResult.message || 'Failed to create banner');
+    } else if (lastResult?.status === 'error' && lastResult.error?._errors) {
+      toast.error(lastResult.error._errors[0]);
     }
   }, [lastResult, router]);
 

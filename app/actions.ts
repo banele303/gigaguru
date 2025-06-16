@@ -481,7 +481,12 @@ export async function createBanner(prevState: any, formData: FormData) {
     const user = await getUser();
 
     if (!user || user.email !== "alexsouthflow2@gmail.com") {
-      return { status: 'error', message: 'Unauthorized' };
+      return {
+        status: "error",
+        error: {
+          _errors: ["Unauthorized"]
+        }
+      };
     }
 
     const submission = parseWithZod(formData, {
@@ -501,10 +506,18 @@ export async function createBanner(prevState: any, formData: FormData) {
       },
     });
 
-    return { status: 'success', message: 'Banner created successfully', banner };
+    return {
+      status: "success",
+      banner
+    };
   } catch (error) {
     console.error("Error creating banner:", error);
-    return { status: 'error', message: 'Failed to create banner' };
+    return {
+      status: "error",
+      error: {
+        _errors: ["Failed to create banner"]
+      }
+    };
   }
 }
 
