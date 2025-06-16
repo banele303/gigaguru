@@ -561,7 +561,7 @@ export async function addItem(productId: string) {
     const user = await getUser();
 
     if (!user) {
-      return redirect("/");
+      return { success: false, error: "User not authenticated" };
     }
 
     // Create a default cart
