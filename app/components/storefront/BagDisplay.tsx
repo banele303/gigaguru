@@ -1,6 +1,6 @@
 "use client";
 
-import { checkOut, delItem } from "@/app/actions";
+import { checkOut, delItem, updateCartItemQuantity } from "@/app/actions";
 import { ChceckoutButton, DeleteItem } from "@/app/components/SubmitButtons";
 import { Cart } from "@/app/lib/interfaces";
 import { formatPrice } from "@/app/lib/utils";
@@ -9,7 +9,11 @@ import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import type { CartItem } from "@/app/lib/interfaces";
 
 interface BagDisplayProps {
   cart: Cart | null;
