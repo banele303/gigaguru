@@ -1,33 +1,39 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Product } from "@/app/lib/zodSchemas";
 import { ShoppingCart } from "lucide-react";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { toast } from "sonner";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { addItem } from "@/app/actions";
 
 interface AddToCartButtonProps {
-  product: Product;
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    images: string[];
+  };
 }
 
 export function AddToCartButton({ product }: AddToCartButtonProps) {
   const { user } = useKindeBrowserClient();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!user) {
       toast.error("You must be logged in to add items to your cart.");
       return;
     }
 
-    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const existingProduct = cart.find((p: Product) => p.id === product.id);
-
-    if (existingProduct) {
-      toast.info("This product is already in your cart.");
-    } else {
-      cart.push(product);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      toast.success("Added to cart");
+    try {
+      const result = await addItem(product.id);
+      if (result?.success) {
+        toast.success("Added to cart");
+      } else {
+        toast.error(result?.error || "Failed to add to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
     }
   };
 
