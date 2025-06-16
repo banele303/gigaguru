@@ -207,7 +207,16 @@ export function CartDropdown({ itemCount, items: initialItems, onClose }: CartDr
               </div>
             </div>
             <div className="mt-6 space-y-3">
-              <form action={checkOut}>
+              <form action={async () => {
+                try {
+                  // Ensure cart is up to date before checkout
+                  await getCart();
+                  await checkOut();
+                } catch (error) {
+                  console.error("Checkout error:", error);
+                  toast.error("Failed to process checkout. Please try again.");
+                }
+              }}>
                 <Button type="submit" className="w-full">
                   Checkout
                 </Button>
