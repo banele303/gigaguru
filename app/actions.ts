@@ -870,18 +870,40 @@ export async function updateCartItemQuantity(productId: string, quantity: number
 }
 
 export async function checkOut() {
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
-
-  if (!user) {
-    return redirect("/api/auth/login");
-  }
-
   try {
-    let cart: Cart | null = await redis.get(`cart-${user.id}`);
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+
+    if (!user) {
+      console.log("No user found, redirecting to login");
+      return redirect("/api/auth/login");
+    }
+
+    console.log("User authenticated:", user.id);
+
+    // Get cart from Redis with retry logic
+    let cart: Cart | null = null;
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    while (retryCount < maxRetries) {
+      try {
+        cart = await redis.get(`cart-${user.id}`);
+        console.log(`Cart retrieval attempt ${retryCount + 1}:`, cart ? "Found" : "Not found");
+        if (cart) break;
+      } catch (redisError) {
+        console.error(`Redis error on attempt ${retryCount + 1}:`, redisError);
+        retryCount++;
+        if (retryCount === maxRetries) {
+          throw new Error("Failed to retrieve cart after multiple attempts");
+        }
+        // Wait for 1 second before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
 
     if (!cart || !cart.items || cart.items.length === 0) {
-      console.warn("Attempting to check out with empty cart");
+      console.warn("Empty cart for user:", user.id);
       return redirect("/bag?error=empty-cart");
     }
 
@@ -889,7 +911,7 @@ export async function checkOut() {
       cart.items.map((item) => ({
         price_data: {
           currency: "usd",
-          unit_amount: item.price * 100, // Assuming price is in cents
+          unit_amount: item.price * 100,
           product_data: {
             name: item.name,
             images: [item.imageString || ''],
@@ -898,35 +920,36 @@ export async function checkOut() {
         quantity: item.quantity || 1,
       }));
 
-    try {
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        line_items: lineItems,
-        success_url:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:3000/payment/success"
-            : "https://ecom-pro-coral.vercel.app/payment/success",
-        cancel_url:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:3000/payment/cancel"
-            : "https://ecom-pro-coral.vercel.app/payment/cancel",
-        metadata: {
-          userId: user.id,
-        },
-      });
+    console.log("Creating Stripe session for user:", user.id);
 
-      if (session && session.url) {
-        return redirect(session.url);
-      } else {
-        console.error("Stripe session created but no URL returned");
-        return redirect("/bag?error=checkout-failed");
-      }
-    } catch (stripeError) {
-      console.error("Stripe checkout error:", stripeError);
-      return redirect("/bag?error=payment-processing");
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: lineItems,
+      success_url:
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000/payment/success"
+          : "https://ecom-pro-coral.vercel.app/payment/success",
+      cancel_url:
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000/payment/cancel"
+          : "https://ecom-pro-coral.vercel.app/payment/cancel",
+      metadata: {
+        userId: user.id,
+      },
+    });
+
+    if (session && session.url) {
+      console.log("Stripe session created successfully");
+      return redirect(session.url);
+    } else {
+      console.error("Stripe session created but no URL returned");
+      return redirect("/bag?error=checkout-failed");
     }
-  } catch (redisError) {
-    console.error("Redis error in checkOut:", redisError);
+  } catch (error) {
+    console.error("Error in checkOut:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+    }
     return redirect("/bag?error=cart-retrieval");
   }
 }
