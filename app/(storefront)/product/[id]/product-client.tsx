@@ -5,10 +5,10 @@ import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import { useFormState } from 'react-dom';
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { Minus, Plus, Check, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, Check, ShoppingBag, X } from 'lucide-react';
 import StarRatings from 'react-star-ratings';
 import { reviewSchema } from '@/app/lib/zodSchemas';
-import { addReview, addItemWithOptions } from '@/app/actions';
+import { addReview, addItemWithOptions, getCart, updateCartItemQuantity } from '@/app/actions';
 import { SubmitButton } from '@/app/components/SubmitButtons';
 import { ImageSlider } from '@/app/components/storefront/ImageSlider';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,9 @@ import { formatPrice } from "@/app/lib/utils";
 import { useAnalytics } from "@/app/hooks/useAnalytics";
 import Image from 'next/image';
 import type { ProductWithReviews, Review } from './page';
+import posthog from 'posthog-js';
+import type { Cart, CartItem } from '@/app/lib/interfaces';
+import { CartDropdown } from '@/app/components/storefront/CartDropdown';
 
 interface ProductClientProps {
   product: ProductWithReviews;
@@ -26,6 +29,11 @@ interface ProductClientProps {
   reviewCount: number;
   reviews: Review[];
 }
+
+// New type definition for cart item with image
+type CartItemWithImage = CartItem & {
+  imageUrl: string;
+};
 
 type ActionResult = {
     status: 'success' | 'error';
@@ -191,6 +199,10 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [showCartDropdown, setShowCartDropdown] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState<number>(0);
+  const [cartItems, setCartItems] = useState<CartItemWithImage[]>([]);
 
   useEffect(() => {
     if (product.sizes && product.sizes.length > 0) {
@@ -200,47 +212,88 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
       setSelectedColor(product.colors[0]);
     }
     setQuantity(1);
-    trackPageView(product.id);
-  }, [product.id, product.sizes, product.colors, trackPageView]);
+    
+    // Track product view with PostHog
+    posthog.capture('product_viewed', {
+      product_id: product.id,
+      product_name: product.name,
+      product_price: product.price,
+      product_category: product.category,
+      is_sale: product.isSale,
+      discount_price: product.discountPrice,
+    });
+  }, [product.id, product.sizes, product.colors]);
 
-  const handleAddToCart = async (e: React.FormEvent) => {
+  // Add countdown timer effect
+  useEffect(() => {
+    if (product.isSale && product.saleEndDate) {
+      const timer = setInterval(() => {
+        const now = new Date().getTime();
+        const endDate = new Date(product.saleEndDate!).getTime();
+        const distance = endDate - now;
+
+        if (distance < 0) {
+          setTimeLeft('Sale ended');
+          clearInterval(timer);
+          return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [product.isSale, product.saleEndDate]);
+
+  const handleAddToCart = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    const sizeRequired = product.sizes && product.sizes.length > 0;
-    const colorRequired = product.colors && product.colors.length > 0;
-    
-    let errorMessage = '';
-    
-    if (sizeRequired && !selectedSize) {
-      errorMessage += 'Please select a size. ';
-    }
-    
-    if (colorRequired && !selectedColor) {
-      errorMessage += 'Please select a color.';
-    }
-    
-    if (errorMessage) {
-      toast.error(errorMessage.trim());
+    if (!selectedSize || !selectedColor) {
+      toast.error("Please select both size and color");
       return;
     }
     
     try {
       const result = await addItemWithOptions(
         product.id, 
-        sizeRequired ? selectedSize : undefined, 
-        colorRequired ? selectedColor : undefined, 
+        selectedSize,
+        selectedColor,
         quantity
       );
       
-      if (result?.success) {
-        trackCartAdd(product.id);
-        toast.success(`Added ${quantity} ${product.name} to cart!`);
+      if (result?.error) {
+        toast.error(result.error);
       } else {
-        toast.error(result?.error || "Failed to add item to cart");
+        toast.success("Added to cart");
+        // Track add to cart with PostHog
+        posthog.capture('product_added_to_cart', {
+          product_id: product.id,
+          product_name: product.name,
+          product_price: product.price,
+          quantity: quantity,
+          size: selectedSize,
+          color: selectedColor,
+          is_sale: product.isSale,
+          discount_price: product.discountPrice,
+        });
+
+        // Update cart count and show dropdown
+        const updatedCart = await getCart();
+        if (updatedCart) {
+          setCartItemCount(updatedCart.items.length);
+          setCartItems(updatedCart.items.map(item => ({
+            ...item,
+            imageUrl: item.imageString,
+          })));
+        }
+        setShowCartDropdown(true);
       }
     } catch (error) {
-      console.error("Error adding to cart:", error);
-      toast.error("Failed to add item to cart. Please try again.");
+      toast.error("Failed to add to cart");
     }
   };
 
@@ -262,51 +315,89 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
   };
 
   return (
-    <div className="flex flex-col gap-y-6">
+    <div className="flex flex-col gap-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Product Header */}
-      <div>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{product.name}</h1>
-        <div className="mt-3 flex items-center justify-between">
-          {product.isSale && product.discountPrice != null && product.discountPrice! < product.price ? (
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl md:text-3xl font-medium text-primary">{formatPrice(product.discountPrice)}</p>
-              <p className="text-muted-foreground line-through text-lg">{formatPrice(product.price)}</p>
-            </div>
-          ) : (
-            <p className="text-2xl md:text-3xl font-medium text-foreground">{formatPrice(product.price)}</p>
-          )}
+      <div className="space-y-6">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">{product.name}</h1>
+        
+        {/* Pricing Section */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-baseline gap-4">
+            {product.isSale && product.discountPrice != null && product.discountPrice! < product.price ? (
+              <>
+                <div className="flex flex-col">
+                  <p className="text-3xl font-bold text-red-600">{formatPrice(product.discountPrice)}</p>
+                  <p className="text-lg text-gray-500 line-through">{formatPrice(product.price)}</p>
+                </div>
+                <span className="px-3 py-1 text-sm font-semibold bg-red-100 text-red-700 rounded-full">
+                  Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                </span>
+              </>
+            ) : (
+              <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
+            )}
+          </div>
+
+          {/* Stock Status and Sale Timer */}
+          <div className="flex flex-wrap items-center gap-4">
+            <p className={`text-sm font-medium ${product.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {product.quantity > 0 ? `${product.quantity} items in stock` : 'Out of stock'}
+            </p>
+            {product.isSale && product.saleEndDate && (
+              <div className="flex items-center gap-2 text-sm font-medium bg-red-100 text-red-700 px-4 py-2 rounded-full">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-timer"
+                >
+                  <path d="M10 2h4" />
+                  <path d="M12 14v4" />
+                  <path d="M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z" />
+                </svg>
+                <span>Sale ends in: {timeLeft}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Rating */}
           <div className="flex items-center gap-x-2">
             {renderStars(averageRating)}
+            <span className="text-sm text-gray-600">({reviewCount} reviews)</span>
           </div>
-        </div>
-        <div className="mt-2">
-          <p className={`text-sm font-medium ${product.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {product.quantity > 0 ? `${product.quantity} items in stock` : 'Out of stock'}
-          </p>
         </div>
       </div>
 
       {/* Product Description */}
-      <div className="prose prose-base text-muted-foreground max-w-none">
-        <p>{product.description}</p>
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
+        <div className="prose prose-base text-gray-600 max-w-none">
+          <p>{product.description}</p>
+        </div>
       </div>
 
       {/* Form for options and add to cart */}
-      <form onSubmit={handleAddToCart} className="space-y-6">
+      <form onSubmit={handleAddToCart} className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg border border-gray-100 space-y-6">
         {/* Sizes */}
         {product.sizes?.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-base font-semibold text-foreground">Size</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Size</h3>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((size: string) => (
                 <button
                   key={size}
                   type="button"
                   onClick={() => setSelectedSize(size)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
                     selectedSize === size
-                      ? 'bg-indigo-600 text-white shadow-md'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   {size}
@@ -319,22 +410,22 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
         {/* Colors */}
         {product.colors?.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-base font-semibold text-foreground">Color</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Color</h3>
             <div className="flex flex-wrap gap-3">
               {product.colors.map((color: string) => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => setSelectedColor(color)}
-                  className={`relative h-8 w-8 rounded-full border-2 transition-transform duration-200 transform hover:scale-110 focus:outline-none ${
-                    selectedColor === color ? 'border-indigo-600 ring-2 ring-offset-2 ring-indigo-500' : 'border'
+                  className={`relative h-10 w-10 rounded-full border-2 transition-transform duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+                    selectedColor === color ? 'border-primary ring-2 ring-offset-2 ring-primary' : 'border-gray-200'
                   }`}
                   style={{ backgroundColor: color.toLowerCase() }}
                   title={color}
                 >
                   {selectedColor === color && (
                     <span className="absolute inset-0 flex items-center justify-center">
-                      <Check className="h-5 w-5 text-white" />
+                      <Check className="h-5 w-5 text-white drop-shadow-md" />
                     </span>
                   )}
                 </button>
@@ -344,22 +435,22 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
         )}
 
         {/* Quantity and Add to Cart */}
-        <div className="flex items-center gap-4 pt-4 border-t">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 border-t border-gray-200">
           {/* Quantity Selector */}
-          <div className="flex items-center rounded-lg border">
+          <div className="flex items-center rounded-lg border border-gray-200 bg-white">
             <button
               type="button"
               onClick={() => setQuantity(p => Math.max(p - 1, 1))}
-              className="px-3 py-2 text-muted-foreground hover:bg-secondary rounded-l-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-l-lg transition-colors disabled:opacity-50"
               disabled={quantity <= 1}
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="w-12 text-center font-semibold text-foreground">{quantity}</span>
+            <span className="w-12 text-center font-semibold text-gray-900">{quantity}</span>
             <button
               type="button"
               onClick={() => setQuantity(p => Math.min(p + 1, 10))}
-              className="px-3 py-2 text-muted-foreground hover:bg-secondary rounded-r-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-r-lg transition-colors disabled:opacity-50"
               disabled={quantity >= 10}
             >
               <Plus className="h-4 w-4" />
@@ -369,7 +460,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
           {/* Add to Cart Button */}
           <button
             type="submit"
-            className="flex-1 inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-all"
+            className="flex-1 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-primary/50 disabled:cursor-not-allowed transition-all"
             disabled={(product.sizes?.length > 0 && !selectedSize) || (product.colors?.length > 0 && !selectedColor)}
           >
             <ShoppingBag className="h-5 w-5 mr-2" />
@@ -382,16 +473,25 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
       </form>
 
       {/* Review Section Trigger */}
-      <div className="border-t pt-6">
+      <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg border border-gray-100">
         <Button
           onClick={() => setShowReviewForm(!showReviewForm)}
           variant="outline"
-          className="w-full py-3"
+          className="w-full py-3 border-gray-200 hover:bg-gray-50 text-gray-700"
         >
           {showReviewForm ? 'Cancel Review' : 'Write a Review'}
         </Button>
         {showReviewForm && <ReviewForm productId={product.id} />}
       </div>
+
+      {/* Cart Dropdown */}
+      {showCartDropdown && (
+        <CartDropdown
+          itemCount={cartItemCount}
+          items={cartItems}
+          onClose={() => setShowCartDropdown(false)}
+        />
+      )}
     </div>
   );
 }

@@ -8,16 +8,23 @@ import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 interface BagDisplayProps {
   cart: Cart | null;
 }
 
 export function BagDisplay({ cart }: BagDisplayProps) {
-  let totalPrice = 0;
-  cart?.items.forEach((item) => {
-    totalPrice += item.price * item.quantity;
-  });
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  useEffect(() => {
+    if (cart?.items) {
+      const newTotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      setTotalPrice(newTotal);
+    } else {
+      setTotalPrice(0);
+    }
+  }, [cart]);
 
   return (
     <div className="max-w-2xl mx-auto mt-10 min-h-[55vh]">
@@ -52,11 +59,11 @@ export function BagDisplay({ cart }: BagDisplayProps) {
                 />
               </div>
               <div className="ml-5 flex justify-between w-full font-medium">
-                <p>{item.name}</p>
+                <p className="text-gray-900">{item.name}</p>
                 <div className="flex flex-col h-full justify-between">
                   <div className="flex items-center gap-x-2">
-                    <p>{item.quantity} x</p>
-                    <p>{formatPrice(item.price)}</p>
+                    <p className="text-gray-700">{item.quantity} x</p>
+                    <p className="text-gray-900 font-semibold">{formatPrice(item.price)}</p>
                   </div>
 
                   <form action={delItem} className="text-end">
@@ -69,8 +76,8 @@ export function BagDisplay({ cart }: BagDisplayProps) {
           ))}
           <div className="mt-10">
             <div className="flex justify-between">
-              <p>Total</p>
-              <p>{formatPrice(totalPrice)}</p>
+              <p className="text-gray-900 font-semibold">Total</p>
+              <p className="text-gray-900 font-bold text-lg">{formatPrice(totalPrice)}</p>
             </div>
 
             <form action={checkOut}>

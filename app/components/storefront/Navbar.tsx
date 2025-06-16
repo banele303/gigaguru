@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { NavbarLinks } from "./NavbarLinks";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { Menu, ShoppingBagIcon } from "lucide-react";
+import { Menu } from "lucide-react";
 import { UserDropdown } from "./UserDropdown";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 import { redis } from "@/app/lib/redis";
 import { Cart } from "@/app/lib/interfaces";
 import { SearchBar } from "./SearchBar";
+import { CartIcon } from "./CartIcon";
 import {
   Sheet,
   SheetContent,
@@ -39,7 +40,7 @@ export async function Navbar() {
 
   const cart: Cart | null = await redis.get(`cart-${user?.id}`);
 
-  const total = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const uniqueProducts = cart?.items ? new Set(cart.items.map(item => item.id)).size : 0;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white">
@@ -78,10 +79,7 @@ export async function Navbar() {
             )}
           </div>
 
-          <Link href="/bag" className="flex items-center gap-1">
-            <ShoppingBagIcon className="h-6 w-6" />
-            <span className="text-sm font-medium">{total}</span>
-          </Link>
+          <CartIcon />
 
           <div className="lg:hidden">
             <Sheet>

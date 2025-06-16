@@ -17,6 +17,7 @@ import {
   Calendar,
   Receipt,
   AlertCircle,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const links = [
@@ -54,6 +55,11 @@ const links = [
         href: "/dashboard/products/low-stock",
       },
     ],
+  },
+  {
+    name: "Banner",
+    href: "/dashboard/banner",
+    icon: ImageIcon,
   },
   {
     name: "Customers",

@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { stripe } from "./lib/stripe";
 import Stripe from "stripe";
 import { revalidateTag } from "next/cache";
+import { NextResponse } from "next/server";
 
 type FlashSaleResult = {
   status: 'success' | 'error';
@@ -25,9 +26,46 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
-  console.log("User:", user?.email);
+  console.log("User:", user);
 
-  if (!user || user.email !== "alexsouthflow2@gmail.com") {
+  if (!user) {
+    console.log("No user found");
+    return {
+      status: 'error' as const,
+      message: 'Please sign in to create products.',
+    };
+  }
+
+  // Check if user exists in the database
+  const dbUser = await prisma.user.findUnique({
+    where: {
+      id: user.id
+    }
+  });
+
+  if (!dbUser) {
+    console.log("User not found in database");
+    // Create the user if they don't exist
+    try {
+      await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email || '',
+          firstName: user.given_name || '',
+          lastName: user.family_name || '',
+          profileImage: user.picture || '',
+        }
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      return {
+        status: 'error' as const,
+        message: 'Failed to create user account. Please try again.',
+      };
+    }
+  }
+
+  if (user.email !== "alexsouthflow2@gmail.com") {
     console.log("Authorization failed for create product");
     return {
       status: 'error' as const,
@@ -36,7 +74,77 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   }
 
   try {
-    const submission = parseWithZod(formData, {
+    // Parse arrays from form data
+    let images: string[] = [];
+    let sizes: string[] = [];
+    let colors: string[] = [];
+
+    try {
+      const imagesStr = formData.get("images") as string;
+      images = JSON.parse(imagesStr);
+      // If the result is a string, it might be double-stringified
+      if (typeof images === 'string') {
+        images = JSON.parse(images);
+      }
+    } catch (e) {
+      console.error("Error parsing images:", e);
+      return {
+        status: 'error' as const,
+        message: 'Failed to parse images. Please try again.',
+      };
+    }
+
+    try {
+      const sizesStr = formData.get("sizes") as string;
+      sizes = JSON.parse(sizesStr);
+    } catch (e) {
+      console.error("Error parsing sizes:", e);
+      sizes = [];
+    }
+
+    try {
+      const colorsStr = formData.get("colors") as string;
+      colors = JSON.parse(colorsStr);
+    } catch (e) {
+      console.error("Error parsing colors:", e);
+      colors = [];
+    }
+
+    const isSale = formData.get("isSale") === "true";
+    const saleEndDateString = formData.get("saleEndDate") as string | null;
+    const saleEndDate = saleEndDateString ? new Date(saleEndDateString) : null;
+    const discountPrice = formData.get("discountPrice") ? Number(formData.get("discountPrice")) : null;
+
+    // Create a new FormData with parsed values
+    const parsedFormData = new FormData();
+    for (const [key, value] of formData.entries()) {
+      if (key === "images") {
+        parsedFormData.append(key, JSON.stringify(images));
+      } else if (key === "sizes") {
+        parsedFormData.append(key, JSON.stringify(sizes));
+      } else if (key === "colors") {
+        parsedFormData.append(key, JSON.stringify(colors));
+      } else if (key === "isSale") {
+        parsedFormData.append(key, String(isSale));
+      } else if (key === "saleEndDate") {
+        parsedFormData.append(key, String(saleEndDate));
+      } else if (key === "discountPrice") {
+        parsedFormData.append(key, String(discountPrice));
+      } else {
+        parsedFormData.append(key, value as string);
+      }
+    }
+
+    console.log("Parsed form data:", {
+      images,
+      sizes,
+      colors,
+      isSale,
+      saleEndDate,
+      discountPrice
+    });
+
+    const submission = parseWithZod(parsedFormData, {
       schema: createProductSchema,
     });
 
@@ -53,36 +161,25 @@ export async function createProduct(prevState: unknown, formData: FormData) {
     
     console.log("Validation passed, submission value:", submission.value);
 
-    // Log all the submission values for debugging
-    console.log("Submission values:", {
-      name: submission.value.name,
-      description: submission.value.description,
-      status: submission.value.status,
-      price: submission.value.price,
-      images: submission.value.images,
-      category: submission.value.category,
-      isFeatured: submission.value.isFeatured,
-      sku: submission.value.sku,
-      sizes: submission.value.sizes,
-      colors: submission.value.colors,
-    });
-
     const product = await prisma.product.create({
       data: {
         name: submission.value.name,
         description: submission.value.description,
         status: submission.value.status,
         price: submission.value.price,
-        images: submission.value.images || [],
+        images: images,
         category: submission.value.category,
         isFeatured: submission.value.isFeatured ?? false,
         sku: submission.value.sku,
         quantity: submission.value.quantity || 0,
-        sizes: submission.value.sizes,
-        colors: submission.value.colors,
+        sizes: sizes,
+        colors: colors,
         brand: submission.value.brand || null,
         material: submission.value.material || null,
         userId: user.id,
+        isSale: isSale,
+        saleEndDate: saleEndDate,
+        discountPrice: discountPrice,
       },
     });
     
@@ -108,6 +205,19 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         message: 'A product with this SKU already exists. Please use a unique SKU.',
       };
     }
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as any).code === 'P2003' &&
+      (error as any).meta?.constraint === 'Product_userId_fkey'
+    ) {
+      return {
+        status: 'error' as const,
+        message: 'User not found. Please try logging in again.',
+      };
+    }
     
     return {
       status: 'error' as const,
@@ -117,21 +227,39 @@ export async function createProduct(prevState: unknown, formData: FormData) {
 }
 
 export async function editProduct(prevState: any, formData: FormData) {
+  try {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
   if (!user || user.email !== "alexsouthflow2@gmail.com") {
-    return redirect("/");
+      return {
+        status: 'error',
+        message: 'Unauthorized access'
+      };
   }
 
   // Parse JSON strings from form data
   const images = JSON.parse(formData.get("images") as string || "[]");
   const sizes = JSON.parse(formData.get("sizes") as string || "[]");
   const colors = JSON.parse(formData.get("colors") as string || "[]");
-  const isSale = formData.get("isSale") === "on"; // Check for 'on' for switch components
-  const discountPrice = formData.get("discountPrice") ? Number(formData.get("discountPrice")) : null;
-  const saleEndDateString = formData.get("saleEndDate") as string | null;
-  const saleEndDate = saleEndDateString ? new Date(saleEndDateString) : null;
+    const isSale = formData.get("isSale") === "true";
+    
+    // Properly handle discountPrice conversion
+    let discountPrice = null;
+    const discountPriceStr = formData.get("discountPrice") as string;
+    if (discountPriceStr && !isNaN(Number(discountPriceStr))) {
+      discountPrice = Number(discountPriceStr);
+    }
+    
+    // Properly handle saleEndDate
+    let saleEndDate = null;
+    const saleEndDateStr = formData.get("saleEndDate") as string;
+    if (saleEndDateStr) {
+      const date = new Date(saleEndDateStr);
+      if (!isNaN(date.getTime())) {
+        saleEndDate = date;
+      }
+    }
 
   // Create a new FormData with parsed values
   const parsedFormData = new FormData();
@@ -147,7 +275,7 @@ export async function editProduct(prevState: any, formData: FormData) {
     } else if (key === "discountPrice") {
       parsedFormData.append(key, String(discountPrice));
     } else if (key === "saleEndDate") {
-      parsedFormData.append(key, String(saleEndDate));
+        parsedFormData.append(key, saleEndDate ? saleEndDate.toISOString() : "");
     } else {
       parsedFormData.append(key, value as string);
     }
@@ -158,13 +286,27 @@ export async function editProduct(prevState: any, formData: FormData) {
   });
 
   if (submission.status !== "success") {
-    return submission.reply();
+      return {
+        status: 'error',
+        message: 'Validation failed: ' + Object.entries(submission.error ?? {}).map(([key, value]) => `${key}: ${value}`).join(', ')
+      };
   }
 
   const productId = formData.get("productId") as string;
 
-  try {
-    await prisma.product.update({
+    // Get the existing product to preserve createdAt
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId }
+    });
+
+    if (!existingProduct) {
+      return {
+        status: 'error',
+        message: 'Product not found'
+      };
+    }
+
+    const updatedProduct = await prisma.product.update({
       where: { id: productId },
       data: {
         name: submission.value.name,
@@ -178,20 +320,28 @@ export async function editProduct(prevState: any, formData: FormData) {
         quantity: submission.value.quantity || 0,
         sizes: sizes,
         colors: colors,
-        discountPrice: submission.value.discountPrice || null,
-        isSale: submission.value.isSale ?? false,
-        saleEndDate: submission.value.saleEndDate || null,
+        discountPrice: isSale ? discountPrice : null,
+        isSale: isSale,
+        saleEndDate: isSale ? saleEndDate : null,
+        createdAt: existingProduct.createdAt, // Preserve original createdAt
+        updatedAt: new Date(), // Update the updatedAt timestamp
       },
     });
+
+    revalidateTag("products");
+    
+    return {
+      status: 'success',
+      message: 'Product updated successfully',
+      data: updatedProduct
+    };
   } catch (error) {
     console.error('Error editing product:', error);
-    return submission.reply({
-      formErrors: ["Failed to edit product."],
-    });
+    return {
+      status: 'error',
+      message: 'Failed to update product. Please try again.'
+    };
   }
-
-  revalidateTag("products");
-  redirect("/dashboard/products");
 }
 
 export async function deleteProduct(formData: FormData) {
@@ -326,11 +476,12 @@ export async function addReview(prevState: unknown, formData: FormData) {
 }
 
 export async function createBanner(prevState: any, formData: FormData) {
+  try {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
   if (!user || user.email !== "alexsouthflow2@gmail.com") {
-    return redirect("/");
+      return { error: "Unauthorized" };
   }
 
   const submission = parseWithZod(formData, {
@@ -341,14 +492,20 @@ export async function createBanner(prevState: any, formData: FormData) {
     return submission.reply();
   }
 
-  await prisma.banner.create({
+    const banner = await prisma.banner.create({
     data: {
       title: submission.value.title,
-      imageString: submission.value.imageString,
+        imageUrl: submission.value.imageString,
+        description: "", // Default empty description
+        link: "", // Default empty link
     },
   });
 
-  redirect("/dashboard/banner");
+    return NextResponse.json({ success: true, banner });
+  } catch (error) {
+    console.error("Error creating banner:", error);
+    return NextResponse.json({ error: "Failed to create banner" }, { status: 500 });
+  }
 }
 
 export async function deleteBanner(formData: FormData) {
@@ -366,6 +523,23 @@ export async function deleteBanner(formData: FormData) {
   });
 
   redirect("/dashboard/banner");
+}
+
+export async function getCart(): Promise<Cart | null> {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const cart: Cart | null = await redis.get(`cart-${user.id}`);
+    return cart;
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    return null;
+  }
 }
 
 export async function addItem(productId: string) {
@@ -508,7 +682,7 @@ export async function addItemWithOptions(
           {
             price: selectedProduct.price,
             id: selectedProduct.id,
-            imageString: selectedProduct.images[0] || "", // Ensure we have a default
+            imageString: selectedProduct.images[0] || "",
             name: selectedProduct.name,
             quantity,
             size,
@@ -516,18 +690,18 @@ export async function addItemWithOptions(
           },
         ];
       } else {
-        let itemFound = false;
+        // Check if the exact same variant exists in the cart
+        const existingItemIndex = myCart.items.findIndex(
+          item => item.id === productId && 
+                 item.size === size && 
+                 item.color === color
+        );
 
-        myCart.items = myCart.items.map((item) => {
-          // Match by product ID, size and color to consider same variant
-          if (item.id === productId && item.size === size && item.color === color) {
-            itemFound = true;
-            item.quantity = (item.quantity || 0) + quantity;
-          }
-          return item;
-        });
-
-        if (!itemFound) {
+        if (existingItemIndex !== -1) {
+          // Update quantity of existing item
+          myCart.items[existingItemIndex].quantity = quantity;
+        } else {
+          // Add new item
           myCart.items.push({
             id: selectedProduct.id,
             imageString: selectedProduct.images[0] || "",
@@ -590,6 +764,43 @@ export async function delItem(formData: FormData) {
     }
   } catch (error) {
     console.error("Error in delItem:", error);
+  }
+}
+
+export async function updateCartItemQuantity(productId: string, quantity: number) {
+  try {
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    try {
+      let cart: Cart | null = await redis.get(`cart-${user.id}`);
+
+      if (cart && cart.items) {
+        const updatedItems = cart.items.map(item => {
+          if (item.id === productId) {
+            return { ...item, quantity: Math.max(1, Math.min(quantity, 10)) }; // Limit quantity between 1 and 10
+          }
+          return item;
+        });
+
+        cart.items = updatedItems;
+        await redis.set(`cart-${user.id}`, cart);
+        revalidatePath("/", "layout");
+        return { success: true };
+      }
+
+      return { success: false, error: "Cart not found" };
+    } catch (redisError) {
+      console.error("Redis error in updateCartItemQuantity:", redisError);
+      return { success: false, error: "Failed to update cart" };
+    }
+  } catch (error) {
+    console.error("Error in updateCartItemQuantity:", error);
+    return { success: false, error: "An unexpected error occurred" };
   }
 }
 

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, XIcon } from "lucide-react";
+import { ChevronLeft, XIcon, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useFormState } from "react-dom";
 import { useForm } from "@conform-to/react";
@@ -34,7 +34,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { categories } from "@/app/lib/categories";
 import { SubmitButton } from "@/app/components/SubmitButtons";
-import { Plus, X, Tag, Ruler, Palette } from "lucide-react";
+import { Tag, Ruler, Palette } from "lucide-react";
 import { logFormSubmission } from "@/app/lib/debug";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 
@@ -51,6 +51,7 @@ export default function ProductCreateRoute() {
   const [isSale, setIsSale] = useState<boolean>(false);
   const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(undefined);
   const [discountPrice, setDiscountPrice] = useState<number | undefined>(undefined);
+  const [isUploadReady, setIsUploadReady] = useState(false);
 
   const handleAddSize = () => {
     if (sizeInput && !selectedSizes.includes(sizeInput)) {
@@ -89,10 +90,18 @@ export default function ProductCreateRoute() {
     }
   }, [lastResult, router]);
 
+  useEffect(() => {
+    // Ensure the component is mounted before enabling uploads
+    setIsUploadReady(true);
+  }, []);
+
   const [form, fields] = useForm({
     lastResult,
     onValidate({ formData }) {
       console.log("Form validation started");
+      formData.set("images", JSON.stringify(images));
+      formData.set("sizes", JSON.stringify(selectedSizes));
+      formData.set("colors", JSON.stringify(selectedColors));
       const result = parseWithZod(formData, { schema: createProductSchema });
       console.log("Validation result:", result);
       return result;
@@ -105,11 +114,48 @@ export default function ProductCreateRoute() {
     setImages(images.filter((_, i) => i !== index));
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (images.length === 0) {
+      toast.error("Please upload at least one image");
+      return;
+    }
+    
+    const formData = new FormData(e.currentTarget);
+    
+    formData.set("images", JSON.stringify(images));
+    formData.set("sizes", JSON.stringify(selectedSizes));
+    formData.set("colors", JSON.stringify(selectedColors));
+    
+    if (saleEndDate) {
+      // Ensure the date is in UTC format
+      const utcDate = new Date(saleEndDate.getTime() - saleEndDate.getTimezoneOffset() * 60000);
+      formData.set("saleEndDate", utcDate.toISOString());
+    }
+    
+    formData.set("isSale", String(isSale));
+    
+    if (discountPrice) {
+      formData.set("discountPrice", String(discountPrice));
+    }
+    
+    console.log("Submitting form data:", {
+      images,
+      sizes: selectedSizes,
+      colors: selectedColors,
+      saleEndDate: saleEndDate ? new Date(saleEndDate.getTime() - saleEndDate.getTimezoneOffset() * 60000).toISOString() : null,
+      isSale: isSale,
+      discountPrice: discountPrice
+    });
+    
+    await action(formData);
+  };
+
   return (
     <form 
       id={form.id} 
-      onSubmit={form.onSubmit}
-      action={action}
+      onSubmit={handleSubmit}
       className="max-w-7xl mx-auto"
     >
       <div className="flex items-center gap-4 mb-6">
@@ -309,106 +355,141 @@ export default function ProductCreateRoute() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-3">
                 <Label>Sizes</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {selectedSizes.map((size) => (
+                    <div
+                      key={size}
+                      className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-1 rounded-full"
+                    >
+                      <span>{size}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeSize(size)}
+                        className="text-secondary-foreground hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
                   <Input
                     type="text"
-                    placeholder="Enter a size"
                     value={sizeInput}
                     onChange={(e) => setSizeInput(e.target.value)}
-                    className="flex-grow"
+                    placeholder="Add size"
+                    className="flex-1"
                   />
-                  <Button type="button" onClick={handleAddSize}>
-                    Add
+                  <Button
+                    type="button"
+                    onClick={handleAddSize}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Size
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedSizes.map((size) => (
-                    <div key={size} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
-                      {size}
-                      <button type="button" onClick={() => removeSize(size)} className="text-gray-500 hover:text-red-500">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-red-500">{fields.sizes?.errors}</p>
               </div>
 
+              {/* Colors Section */}
               <div className="flex flex-col gap-3">
                 <Label>Colors</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Enter a color"
-                    value={colorInput}
-                    onChange={(e) => setColorInput(e.target.value)}
-                    className="flex-grow"
-                  />
-                  <Button type="button" onClick={handleAddColor}>
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2">
                   {selectedColors.map((color) => (
-                    <div key={color} className="flex items-center gap-1 bg-gray-200 rounded-full px-2 py-1 text-sm">
+                    <div
+                      key={color}
+                      className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-1 rounded-full"
+                    >
                       <div 
-                        className="h-3 w-3 rounded-full mr-1" 
+                        className="h-3 w-3 rounded-full border border-border"
                         style={{ 
-                          backgroundColor: color.toLowerCase(), 
-                          border: color.toLowerCase() === 'white' ? '1px solid #ddd' : 'none' 
-                        }} 
+                          backgroundColor: color.toLowerCase(),
+                          boxShadow: color.toLowerCase() === 'white' ? 'inset 0 0 0 1px #ddd' : 'none'
+                        }}
                       />
-                      {color}
-                      <button 
-                        type="button" 
-                        onClick={() => removeColor(color)} 
-                        className="text-gray-500 hover:text-red-500"
+                      <span>{color}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeColor(color)}
+                        className="text-secondary-foreground hover:text-destructive"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-red-500">{fields.colors?.errors}</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={colorInput}
+                    onChange={(e) => setColorInput(e.target.value)}
+                    placeholder="Add color"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAddColor}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Color
+                  </Button>
+                </div>
               </div>
             </div>
 
-            {/* Images Section */}
+            {/* Image Upload Section */}
             <div className="flex flex-col gap-3">
-              <Label>Images</Label>
-              {images.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {images.map((image, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <Image
-                        fill
-                        src={image}
-                        alt="Product Image"
-                        className="object-cover rounded-lg"
-                      />
-                      <button
-                        onClick={() => handleDelete(index)}
-                        type="button"
-                        className="absolute -top-2 -right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600 transition-colors"
-                      >
-                        <XIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
+              <Label>Product Images</Label>
+              {isUploadReady && (
                 <UploadDropzone
                   endpoint="imageUploader"
                   onClientUploadComplete={(res) => {
-                    setImages(res.map((r) => r.url));
+                    if (res) {
+                      const newImages = res.map((file) => file.url);
+                      setImages((prev) => [...prev, ...newImages]);
+                      toast.success("Images uploaded successfully");
+                    }
                   }}
-                  onUploadError={() => {
-                    toast.error("Failed to upload image");
+                  onUploadError={(error: Error) => {
+                    toast.error(`Error uploading images: ${error.message}`);
+                  }}
+                  config={{
+                    mode: "auto",
+                    maxFileSize: 10 * 1024 * 1024, // 10MB
                   }}
                 />
               )}
-              <p className="text-red-500">{fields.images.errors}</p>
+              <p className="text-sm text-muted-foreground">
+                Upload up to 10 images. Maximum file size: 10MB. Supported formats: JPG, PNG, WebP
+              </p>
             </div>
+
+            {/* Image Preview Grid */}
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
+                {images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <Image
+                      src={image}
+                      alt={`Product image ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="rounded-lg object-cover w-full h-[200px]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(index)}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
         <CardFooter className="border-t bg-muted/50 p-6">

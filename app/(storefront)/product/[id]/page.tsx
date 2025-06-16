@@ -64,7 +64,6 @@ async function getProductData(productId: string) {
         colors: true,
         brand: true,
         material: true,
-        views: true,
         createdAt: true,
         updatedAt: true,
         reviews: {

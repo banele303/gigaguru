@@ -1,0 +1,57 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { ShoppingBagIcon } from 'lucide-react';
+import { getCart } from '@/app/actions';
+import { CartDropdown } from './CartDropdown';
+
+export function CartIcon() {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [itemCount, setItemCount] = useState(0);
+
+  const fetchCart = async () => {
+    const cart = await getCart();
+    if (cart) {
+      // Map items and count unique products
+      const items = cart.items.map(item => ({
+        ...item,
+        imageUrl: item.imageString
+      }));
+      setCartItems(items);
+      // Count unique products (items with different IDs)
+      const uniqueProducts = new Set(items.map(item => item.id));
+      setItemCount(uniqueProducts.size);
+    }
+  };
+
+  useEffect(() => {
+    if (showDropdown) {
+      fetchCart();
+    }
+  }, [showDropdown]);
+
+  return (
+    <>
+      <button 
+        onClick={() => setShowDropdown(true)} 
+        className="relative p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+      >
+        <ShoppingBagIcon className="h-5 w-5 text-gray-700" />
+        {itemCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">
+            {itemCount}
+          </span>
+        )}
+      </button>
+
+      {showDropdown && (
+        <CartDropdown
+          itemCount={itemCount}
+          items={cartItems}
+          onClose={() => setShowDropdown(false)}
+        />
+      )}
+    </>
+  );
+} 

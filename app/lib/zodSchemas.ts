@@ -1,14 +1,22 @@
 import { z } from "zod";
 
 export const productSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
   status: z.enum(["draft", "published", "archived"]),
   price: z.coerce.number().min(1, "Price must be greater than 0"),
-  discountPrice: z.coerce.number().min(0, "Discount price cannot be negative").optional().nullable(),
+  discountPrice: z.union([
+    z.number().min(0, "Discount price cannot be negative"),
+    z.string().transform((val) => val === "" ? null : Number(val)),
+    z.null()
+  ]).optional(),
   isSale: z.coerce.boolean().optional().default(false),
-  saleEndDate: z.coerce.date().optional().nullable(),
+  saleEndDate: z.union([
+    z.date(),
+    z.string().transform((val) => val === "" ? null : new Date(val)),
+    z.null()
+  ]).optional(),
   sku: z.string().min(1, "SKU is required"),
   images: z.array(z.string()).min(1, "At least one image is required"),
   category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),
@@ -19,15 +27,62 @@ export const productSchema = z.object({
   brand: z.string().optional().nullable(),
   material: z.string().optional().nullable(),
   views: z.number().default(0),
-  createdAt: z.date(),
-  updatedAt: z.date()
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional()
 });
 
-export const createProductSchema = productSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  views: true,
+export const createProductSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
+  status: z.enum(["draft", "published", "archived"]),
+  price: z.coerce.number().min(1, "Price must be greater than 0"),
+  discountPrice: z.union([
+    z.number().min(0, "Discount price cannot be negative"),
+    z.string().transform((val) => val === "" ? null : Number(val)),
+    z.null()
+  ]).optional(),
+  isSale: z.coerce.boolean().optional().default(false),
+  saleEndDate: z.union([
+    z.date(),
+    z.string().transform((val) => val === "" ? null : new Date(val)),
+    z.null()
+  ]).optional(),
+  sku: z.string().min(1, "SKU is required"),
+  images: z.array(z.string()).min(1, "At least one image is required"),
+  category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),
+  isFeatured: z.coerce.boolean().optional().default(false),
+  quantity: z.coerce.number().min(0, "Quantity cannot be negative").default(0),
+  sizes: z.array(z.string()).optional().default([]),
+  colors: z.array(z.string()).optional().default([]),
+  brand: z.string().optional().nullable(),
+  material: z.string().optional().nullable(),
+});
+
+export const updateProductSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
+  status: z.enum(["draft", "published", "archived"]),
+  price: z.coerce.number().min(1, "Price must be greater than 0"),
+  discountPrice: z.union([
+    z.number().min(0, "Discount price cannot be negative"),
+    z.string().transform((val) => val === "" ? null : Number(val)),
+    z.null()
+  ]).optional(),
+  isSale: z.coerce.boolean().optional().default(false),
+  saleEndDate: z.union([
+    z.date(),
+    z.string().transform((val) => val === "" ? null : new Date(val)),
+    z.null()
+  ]).optional(),
+  sku: z.string().min(1, "SKU is required"),
+  images: z.array(z.string()).min(1, "At least one image is required"),
+  category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),
+  isFeatured: z.coerce.boolean().optional().default(false),
+  quantity: z.coerce.number().min(0, "Quantity cannot be negative").default(0),
+  sizes: z.array(z.string()).optional().default([]),
+  colors: z.array(z.string()).optional().default([]),
+  brand: z.string().optional().nullable(),
+  material: z.string().optional().nullable(),
 });
 
 export const reviewSchema = z.object({
@@ -41,10 +96,10 @@ export const reviewSchema = z.object({
 });
 
 export const bannerSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  imageString: z.string(),
-  createdAt: z.date()
+  title: z.string().min(1, "Title is required"),
+  imageString: z.string().min(1, "Image is required"),
+  description: z.string().optional().default(""),
+  link: z.string().optional().default("")
 });
 
 export const emailCampaignSchema = z.object({

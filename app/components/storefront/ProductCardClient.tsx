@@ -102,8 +102,8 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
                     </>
                   )}
                   <div className="absolute inset-0 flex items-center justify-between px-2">
-                    <CarouselPrevious className="static translate-x-0 translate-y-0 bg-white/80 hover:bg-white" />
-                    <CarouselNext className="static translate-x-0 translate-y-0 bg-white/80 hover:bg-white" />
+                    <CarouselPrevious className="static translate-x-0 translate-y-0 bg-black/80 hover:bg-black text-white" />
+                    <CarouselNext className="static translate-x-0 translate-y-0 bg-black/80 hover:bg-black text-white" />
                   </div>
                 </div>
               </CarouselItem>

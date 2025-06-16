@@ -40,11 +40,24 @@ export function ImageSlider({ images }: iAppProps) {
           className="object-cover w-full max-h-[500px]"
         />
 
+        {/* Dark overlay for better contrast */}
+        <div className="absolute inset-0 bg-black/20" />
+
         <div className="absolute inset-0 flex items-center justify-between px-4">
-          <Button onClick={handlePreviousClick} variant="ghost" size="icon">
+          <Button 
+            onClick={handlePreviousClick} 
+            variant="secondary" 
+            size="icon"
+            className="bg-black/50 hover:bg-black/70 text-white"
+          >
             <ChevronLeft className="w-6 h-6" />
           </Button>
-          <Button onClick={handleNextClick} variant="ghost" size="icon">
+          <Button 
+            onClick={handleNextClick} 
+            variant="secondary" 
+            size="icon"
+            className="bg-black/50 hover:bg-black/70 text-white"
+          >
             <ChevronRight className="w-6 h-6" />
           </Button>
         </div>

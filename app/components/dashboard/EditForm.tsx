@@ -32,9 +32,11 @@ import { addReview, editProduct } from "@/app/actions";
 import { useForm } from "@conform-to/react";
 import { useFormStatus } from "react-dom";
 import { parseWithZod } from "@conform-to/zod";
-import { productSchema } from "@/app/lib/zodSchemas";
+import { createProductSchema } from "@/app/lib/zodSchemas";
 import { type Category, type ProductStatus, type CampaignStatus, type RecipientStatus } from "@/app/lib/prisma-types";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Define the Review type locally
 type Review = {
@@ -88,16 +90,24 @@ interface iAppProps {
 }
 
 export function EditForm({ data }: iAppProps) {
-  const [images, setImages] = useState<string[]>(data.images);
+  const router = useRouter();
+  const [images, setImages] = useState<string[]>(data.images || []);
   const [selectedSizes, setSelectedSizes] = useState<string[]>(data.sizes || []);
   const [selectedColors, setSelectedColors] = useState<string[]>(data.colors || []);
   const [customSize, setCustomSize] = useState<string>("");
   const [customColor, setCustomColor] = useState<string>("");
   const sizesRef = useRef<HTMLSelectElement>(null);
   const colorsRef = useRef<HTMLSelectElement>(null);
-  const [discountPrice, setDiscountPrice] = useState<number | undefined>(data.discountPrice);
-  const [isSale, setIsSale] = useState<boolean>(data.isSale || false);
-  const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(data.saleEndDate);
+  const [isSale, setIsSale] = useState(data.isSale || false);
+  const [discountPrice, setDiscountPrice] = useState<number | null>(data.discountPrice || null);
+  const [saleEndDate, setSaleEndDate] = useState<Date | null>(data.saleEndDate ? new Date(data.saleEndDate) : null);
+  const [isUploadReady, setIsUploadReady] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    // Ensure the component is mounted before enabling uploads
+    setIsUploadReady(true);
+  }, []);
 
   const handleCustomSizeAdd = () => {
     if (customSize && !selectedSizes.includes(customSize)) {
@@ -120,29 +130,87 @@ export function EditForm({ data }: iAppProps) {
   const removeColor = (color: string) => {
     setSelectedColors(selectedColors.filter((c) => c !== color));
   };
-  const [lastResult, action] = useFormState(editProduct, undefined);
-  const [reviewState, reviewAction] = useFormState(addReview, undefined);
-
-  useEffect(() => {
-    if (reviewState && "message" in reviewState) {
-      alert(reviewState.message);
-    }
-  }, [reviewState]);
-  const [form, fields] = useForm({
-    lastResult,
-    onValidate({ formData }) {
-      return parseWithZod(formData, { schema: productSchema });
-    },
-    shouldValidate: "onSubmit",
-    shouldRevalidate: "onSubmit",
-  });
 
   const handleDelete = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data || isSubmitting) return;
+
+    setIsSubmitting(true);
+    const loadingToast = toast.loading("Saving product...");
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    // Ensure all required fields are set
+    formData.set("name", formData.get("name") as string);
+    formData.set("description", formData.get("description") as string);
+    formData.set("status", formData.get("status") as string || "draft");
+    formData.set("price", formData.get("price") as string);
+    formData.set("sku", formData.get("sku") as string);
+    formData.set("category", formData.get("category") as string);
+    formData.set("images", JSON.stringify(images));
+    formData.set("sizes", JSON.stringify(selectedSizes));
+    formData.set("colors", JSON.stringify(selectedColors));
+    formData.set("isSale", String(isSale));
+    
+    // Handle discount price
+    if (isSale) {
+      const discountPriceValue = formData.get("discountPrice") as string;
+      if (discountPriceValue && !isNaN(Number(discountPriceValue))) {
+        formData.set("discountPrice", discountPriceValue);
+      } else {
+        formData.delete("discountPrice");
+      }
+    } else {
+      formData.delete("discountPrice");
+    }
+    
+    // Handle sale end date
+    if (isSale && saleEndDate) {
+      const date = new Date(saleEndDate);
+      if (!isNaN(date.getTime())) {
+        formData.set("saleEndDate", date.toISOString());
+      } else {
+        formData.delete("saleEndDate");
+      }
+    } else {
+      formData.delete("saleEndDate");
+    }
+    
+    formData.set("quantity", formData.get("quantity") as string || "0");
+    formData.set("productId", data.id);
+
+    try {
+      const response = await fetch(`/api/products/${data.id}`, {
+        method: 'PUT',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.dismiss(loadingToast);
+        toast.success(result.message || 'Product updated successfully');
+        router.push("/dashboard/products");
+        router.refresh();
+      } else {
+        toast.dismiss(loadingToast);
+        toast.error(result.message || 'Failed to update product');
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error("Failed to update product. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div>
-      <form id={form.id} onSubmit={form.onSubmit} action={action}>
+      <form onSubmit={handleSubmit} className="space-y-8">
         <input type="hidden" name="productId" value={data.id} />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -155,7 +223,19 @@ export function EditForm({ data }: iAppProps) {
               Edit Product
             </h1>
           </div>
-          <SubmitButton text="Save Changes" />
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/products")}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
@@ -173,43 +253,36 @@ export function EditForm({ data }: iAppProps) {
                     <Label>Name</Label>
                     <Input
                       type="text"
-                      key={fields.name.key}
-                      name={fields.name.name}
+                      name="name"
                       defaultValue={data.name}
                       className="w-full"
                       placeholder="Product Name"
                     />
-                    <p className="text-red-500">{fields.name.errors}</p>
                   </div>
 
                   <div className="flex flex-col gap-3">
                     <Label>Description</Label>
                     <Textarea
-                      key={fields.description.key}
-                      name={fields.description.name}
+                      name="description"
                       defaultValue={data.description}
                       placeholder="Write your description right here..."
                     />
-                    <p className="text-red-500">{fields.description.errors}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-3">
                       <Label>Price</Label>
                       <Input
-                        key={fields.price.key}
-                        name={fields.price.name}
+                        name="price"
                         defaultValue={data.price}
                         type="number"
                         placeholder="R55"
                       />
-                      <p className="text-red-500">{fields.price.errors}</p>
                     </div>
                     <div className="flex flex-col gap-3">
                       <Label>Discount Price</Label>
                       <Input
                         type="number"
-                        key={fields.discountPrice?.key}
                         name="discountPrice"
                         defaultValue={data.discountPrice || ''}
                         placeholder="R40"
@@ -217,19 +290,16 @@ export function EditForm({ data }: iAppProps) {
                         disabled={!isSale}
                         required={isSale}
                       />
-                      <p className="text-red-500">{fields.discountPrice?.errors}</p>
                     </div>
                     <div className="flex flex-col gap-3">
                       <Label>Quantity</Label>
                       <Input
-                        key={fields.quantity?.key}
                         name="quantity"
                         type="number"
                         min="0"
                         defaultValue={(data as any).quantity || 0}
                         placeholder="Available stock quantity"
                       />
-                      <p className="text-red-500">{fields.quantity?.errors}</p>
                     </div>
                   </div>
 
@@ -244,36 +314,32 @@ export function EditForm({ data }: iAppProps) {
                       </div>
                       <Switch
                         id="isSale"
-                        name={fields.isSale.name}
+                        name="isSale"
                         checked={isSale}
                         onCheckedChange={setIsSale}
                       />
-                      <p className="text-red-500">{fields.isSale.errors}</p>
                     </div>
 
                     <div className="flex flex-col gap-3">
                       <Label htmlFor="saleEndDate">Sale End Date</Label>
                       <DateTimePicker
                         id="saleEndDate"
-                        name={fields.saleEndDate.name}
+                        name="saleEndDate"
                         value={saleEndDate}
                         onChange={setSaleEndDate}
                         required={isSale}
                         className="w-full"
                       />
-                      <p className="text-red-500">{fields.saleEndDate.errors}</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-3">
                     <Label>SKU</Label>
                     <Input
-                      key={fields.sku.key}
-                      name={fields.sku.name}
+                      name="sku"
                       defaultValue={data.sku}
                       placeholder="Product SKU"
                     />
-                    <p className="text-red-500">{fields.sku.errors}</p>
                   </div>
                 </div>
               </CardContent>
@@ -287,7 +353,7 @@ export function EditForm({ data }: iAppProps) {
                 <div className="flex flex-col gap-3">
                   <input
                     type="hidden"
-                    name={fields.images.name}
+                    name="images"
                     value={JSON.stringify(images)}
                   />
                   {images.length > 0 ? (
@@ -321,7 +387,6 @@ export function EditForm({ data }: iAppProps) {
                       }}
                     />
                   )}
-                  <p className="text-red-500">{fields.images.errors}</p>
                 </div>
               </CardContent>
             </Card>
@@ -336,8 +401,7 @@ export function EditForm({ data }: iAppProps) {
                 <div className="flex flex-col gap-3">
                   <Label>Status</Label>
                   <Select
-                    key={fields.status.key}
-                    name={fields.status.name}
+                    name="status"
                     defaultValue={data.status}
                   >
                     <SelectTrigger>
@@ -349,13 +413,11 @@ export function EditForm({ data }: iAppProps) {
                       <SelectItem value="archived">Archived</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-red-500">{fields.status.errors}</p>
                 </div>
                 <div className="flex flex-col gap-3">
                   <Label>Category</Label>
                   <Select
-                    key={fields.category.key}
-                    name={fields.category.name}
+                    name="category"
                     defaultValue={data.category}
                   >
                     <SelectTrigger>
@@ -369,16 +431,13 @@ export function EditForm({ data }: iAppProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-red-500">{fields.category.errors}</p>
                 </div>
                 <div className="flex flex-col gap-3">
                   <Label>Featured Product</Label>
                   <Switch
-                    key={fields.isFeatured.key}
-                    name={fields.isFeatured.name}
+                    name="isFeatured"
                     defaultChecked={data.isFeatured}
                   />
-                  <p className="text-red-500">{fields.isFeatured.errors}</p>
                 </div>
               </CardContent>
             </Card>
@@ -440,12 +499,6 @@ export function EditForm({ data }: iAppProps) {
                       </div>
                     ))}
                   </div>
-                  <input
-                    type="hidden"
-                    name="sizes"
-                    value={JSON.stringify(selectedSizes)}
-                  />
-                  <p className="text-red-500">{fields.sizes?.errors}</p>
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -510,12 +563,6 @@ export function EditForm({ data }: iAppProps) {
                       </div>
                     ))}
                   </div>
-                  <input
-                    type="hidden"
-                    name="colors"
-                    value={JSON.stringify(selectedColors)}
-                  />
-                  <p className="text-red-500">{fields.colors?.errors}</p>
                 </div>
               </CardContent>
             </Card>

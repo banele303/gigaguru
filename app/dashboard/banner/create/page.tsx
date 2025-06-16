@@ -20,29 +20,62 @@ import { parseWithZod } from "@conform-to/zod";
 import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFormState } from "react-dom";
+import { toast } from "sonner";
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const RECOMMENDED_IMAGE_DIMENSIONS = {
+  width: 1920,
+  height: 600,
+};
 
 export default function BannerRoute() {
+  const router = useRouter();
   const [image, setImages] = useState<string | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastResult, action] = useFormState(createBanner, undefined);
 
   const [form, fields] = useForm({
     lastResult,
-
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: bannerSchema });
     },
-
     shouldValidate: "onBlur",
     shouldRevalidate: "onInput",
   });
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!image) {
+      toast.error("Please upload an image");
+      return;
+    }
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    formData.append("imageString", image);
+
+    try {
+      const result = await createBanner(null, formData);
+      
+      if (result.status === 'success') {
+        toast.success(result.message);
+        router.push("/dashboard/banners");
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("Failed to create banner. Please try again.");
+    }
+  };
+
   return (
-    <form id={form.id} onSubmit={form.onSubmit} action={action}>
+    <form id={form.id} onSubmit={handleSubmit}>
       <div className="flex items-center gap-x-4">
         <Button variant="outline" size="icon" asChild>
-          <Link href="/dashboard/products">
+          <Link href="/dashboard/banner">
             <ChevronLeft className="w-4 h-4" />
           </Link>
         </Button>
@@ -52,20 +85,26 @@ export default function BannerRoute() {
       <Card className="mt-5">
         <CardHeader>
           <CardTitle>Banner Details</CardTitle>
-          <CardDescription>Create your banner right here</CardDescription>
+          <CardDescription>
+            Create your banner right here. Recommended image size: {RECOMMENDED_IMAGE_DIMENSIONS.width}x{RECOMMENDED_IMAGE_DIMENSIONS.height}px
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-y-6">
             <div className="flex flex-col gap-3">
-              <Label>Name</Label>
+              <Label>Title</Label>
               <Input
                 name={fields.title.name}
                 key={fields.title.key}
                 defaultValue={fields.title.initialValue}
                 type="text"
-                placeholder="Create title for Banner"
+                placeholder="Enter banner title"
+                required
+                disabled={isSubmitting}
               />
-              <p className="text-red-500">{fields.title.errors}</p>
+              {fields.title.errors && (
+                <p className="text-sm text-red-500">{fields.title.errors}</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-3">
@@ -78,31 +117,52 @@ export default function BannerRoute() {
                 defaultValue={fields.imageString.initialValue}
               />
               {image !== undefined ? (
+                <div className="relative">
                 <Image
                   src={image}
-                  alt="Product Image"
-                  width={200}
-                  height={200}
-                  className="w-[200px] h-[200px] object-cover border rounded-lg"
+                    alt="Banner Image"
+                    width={RECOMMENDED_IMAGE_DIMENSIONS.width}
+                    height={RECOMMENDED_IMAGE_DIMENSIONS.height}
+                    className="w-full h-[300px] object-cover border rounded-lg"
                 />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => setImages(undefined)}
+                    disabled={isSubmitting}
+                  >
+                    Remove
+                  </Button>
+                </div>
               ) : (
                 <UploadDropzone
                   onClientUploadComplete={(res) => {
                     setImages(res[0].url);
+                    toast.success("Image uploaded successfully");
                   }}
-                  onUploadError={() => {
-                    alert("Something went wrong");
+                  onUploadError={(error) => {
+                    toast.error("Failed to upload image");
+                    console.error("Upload error:", error);
                   }}
                   endpoint="bannerImageRoute"
+                  config={{
+                    mode: "auto",
+                    maxFileSize: MAX_IMAGE_SIZE,
+                  }}
                 />
               )}
-
-              <p className="text-red-500">{fields.imageString.errors}</p>
+              {fields.imageString.errors && (
+                <p className="text-sm text-red-500">{fields.imageString.errors}</p>
+              )}
             </div>
           </div>
         </CardContent>
         <CardFooter>
-          <SubmitButton text="Create Banner" />
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Creating..." : "Create Banner"}
+          </Button>
         </CardFooter>
       </Card>
     </form>

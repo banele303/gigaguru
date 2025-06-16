@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Banner" ALTER COLUMN "description" DROP NOT NULL,
+ALTER COLUMN "link" DROP NOT NULL;
