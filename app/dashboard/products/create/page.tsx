@@ -453,7 +453,7 @@ export default function ProductCreateRoute() {
                     toast.error("Failed to upload images");
                     console.error("Upload error:", error);
                   }}
-                  endpoint="productImageRoute"
+                  endpoint="imageUploader"
                   config={{
                     mode: "auto"
                   }}
