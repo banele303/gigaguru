@@ -682,7 +682,7 @@ export async function addItemWithOptions(
         myCart.items = [
           {
             price: selectedProduct.price,
-            discountPrice: selectedProduct.discountPrice,
+            discountPrice: selectedProduct.discountPrice || undefined,
             id: selectedProduct.id,
             imageString: selectedProduct.images[0] || "",
             name: selectedProduct.name,
@@ -704,7 +704,7 @@ export async function addItemWithOptions(
           myCart.items[existingItemIndex] = {
             ...myCart.items[existingItemIndex],
             quantity,
-            discountPrice: selectedProduct.discountPrice
+            discountPrice: selectedProduct.discountPrice || undefined
           };
         } else {
           // Add new item
@@ -713,7 +713,7 @@ export async function addItemWithOptions(
             imageString: selectedProduct.images[0] || "",
             name: selectedProduct.name,
             price: selectedProduct.price,
-            discountPrice: selectedProduct.discountPrice,
+            discountPrice: selectedProduct.discountPrice || undefined,
             quantity,
             size,
             color,
