@@ -6,7 +6,7 @@ import { Minus, Plus, X, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatPrice } from "@/app/lib/utils";
-import { updateCartItemQuantity, getCart, delItem } from '@/app/actions';
+import { updateCartItemQuantity, getCart, delItem, checkOut } from '@/app/actions';
 import type { CartItem } from '@/app/lib/interfaces';
 import Link from 'next/link';
 
