@@ -8,7 +8,7 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ req }) => {
+      authorized: ({ req }: { req: NextRequest }) => {
         return true;
       },
     },
