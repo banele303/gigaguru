@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ImageUpload } from '@/components/ui/image-upload';
+import { UploadDropzone } from '@/app/lib/uplaodthing';
+import Image from 'next/image';
 
 export default function CreateBannerPage() {
   const router = useRouter();
@@ -81,15 +82,43 @@ export default function CreateBannerPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="image">Banner Image</Label>
-              <ImageUpload
-                value={imageUrl}
-                onChange={(url) => {
-                  console.log('Image URL updated:', url);
-                  setImageUrl(url);
-                }}
-                onRemove={() => setImageUrl('')}
-                endpoint="bannerImageRoute"
-              />
+              {imageUrl ? (
+                <div className="relative">
+                  <Image
+                    src={imageUrl}
+                    alt="Banner preview"
+                    width={1920}
+                    height={600}
+                    className="w-full h-[300px] object-cover rounded-lg"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => setImageUrl('')}
+                    disabled={isLoading}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ) : (
+                <UploadDropzone
+                  endpoint="bannerImageRoute"
+                  onClientUploadComplete={(res) => {
+                    setImageUrl(res[0].url);
+                    toast.success('Image uploaded successfully');
+                  }}
+                  onUploadError={(error) => {
+                    toast.error('Failed to upload image');
+                    console.error('Upload error:', error);
+                  }}
+                  config={{
+                    mode: "auto",
+                    maxFileSize: 5 * 1024 * 1024, // 5MB
+                  }}
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -119,20 +148,19 @@ export default function CreateBannerPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="link">Link URL</Label>
+              <Label htmlFor="link">Link</Label>
               <Input
                 id="link"
                 name="link"
-                type="url"
                 value={formData.link}
                 onChange={handleChange}
                 required
                 disabled={isLoading}
-                placeholder="Enter banner link URL"
+                placeholder="Enter banner link"
               />
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button type="submit" disabled={isLoading}>
               {isLoading ? 'Creating...' : 'Create Banner'}
             </Button>
           </form>

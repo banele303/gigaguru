@@ -675,7 +675,7 @@ export async function addItemWithOptions(
       if (!selectedProduct) {
         return { success: false, error: "Product not found" };
       }
-      
+
       // If cart is empty or has no items
       if (!myCart.items || myCart.items.length === 0) {
         myCart.items = [
@@ -730,7 +730,7 @@ export async function addItemWithOptions(
   }
 }
 
-export async function delItem(formData: FormData) {
+export async function delItem(productId: string) {
   try {
     const { getUser } = getKindeServerSession();
     const user = await getUser();
@@ -739,31 +739,34 @@ export async function delItem(formData: FormData) {
       return redirect("/");
     }
 
-    const productId = formData.get("productId");
-    
-    if (!productId) {
-      console.error("No product ID provided for deletion");
-      return;
-    }
-
     try {
-      let cart: Cart | null = await redis.get(`cart-${user.id}`);
-
-      if (cart && cart.items) {
-        const updateCart: Cart = {
-          userId: user.id,
-          items: cart.items.filter((item) => item.id !== productId),
-        };
-
-        await redis.set(`cart-${user.id}`, updateCart);
+      const cart: Cart | null = await redis.get(`cart-${user.id}`);
+      
+      if (!cart || !cart.items) {
+        return { success: false, error: "Cart not found" };
       }
 
-      revalidatePath("/bag");
-    } catch (redisError) {
-      console.error("Redis error in delItem:", redisError);
+      // Filter out the item to be removed
+      const updatedItems = cart.items.filter(item => item.id !== productId);
+      
+      // Update the cart with the filtered items
+      const updatedCart: Cart = {
+        ...cart,
+        items: updatedItems
+      };
+
+      // Save the updated cart back to Redis
+      await redis.set(`cart-${user.id}`, updatedCart);
+      
+      revalidatePath("/", "layout");
+      return { success: true };
+    } catch (error) {
+      console.error("Error in delItem:", error);
+      return { success: false, error: "Failed to remove item from cart" };
     }
   } catch (error) {
     console.error("Error in delItem:", error);
+    return { success: false, error: "An unexpected error occurred" };
   }
 }
 

@@ -6,7 +6,7 @@ import { Minus, Plus, X, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatPrice } from "@/app/lib/utils";
-import { updateCartItemQuantity, getCart } from '@/app/actions';
+import { updateCartItemQuantity, getCart, delItem } from '@/app/actions';
 import type { CartItem } from '@/app/lib/interfaces';
 import Link from 'next/link';
 
@@ -34,26 +34,44 @@ export function CartDropdown({ itemCount, items: initialItems, onClose }: CartDr
     }
   };
 
-  const handleQuantityChange = async (productId: string, newQuantity: number) => {
-    setIsUpdating(prev => ({ ...prev, [productId]: true }));
+  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     try {
-      const result = await updateCartItemQuantity(productId, newQuantity);
-      if (!result.success) {
-        toast.error(result.error || "Failed to update quantity");
-      } else {
-        // If quantity is 0, it means the item was removed
-        if (newQuantity === 0) {
+      if (newQuantity === 0) {
+        // Delete item
+        const result = await delItem(itemId);
+        if (result?.success) {
           toast.success("Item removed from cart");
+          // Refresh cart after deletion
+          const updatedCart = await getCart();
+          if (updatedCart) {
+            setItems(updatedCart.items.map(item => ({
+              ...item,
+              imageUrl: item.imageString,
+            })));
+          }
         } else {
-          toast.success("Cart updated");
+          toast.error(result?.error || "Failed to remove item");
         }
-        // Refresh the cart to get the latest state
-        await refreshCart();
+      } else {
+        // Update quantity
+        const result = await updateCartItemQuantity(itemId, newQuantity);
+        if (result?.success) {
+          toast.success("Cart updated");
+          // Refresh cart after update
+          const updatedCart = await getCart();
+          if (updatedCart) {
+            setItems(updatedCart.items.map(item => ({
+              ...item,
+              imageUrl: item.imageString,
+            })));
+          }
+        } else {
+          toast.error(result?.error || "Failed to update quantity");
+        }
       }
     } catch (error) {
+      console.error("Error updating cart:", error);
       toast.error("Failed to update cart");
-    } finally {
-      setIsUpdating(prev => ({ ...prev, [productId]: false }));
     }
   };
 
