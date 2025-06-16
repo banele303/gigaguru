@@ -828,7 +828,7 @@ export async function updateCartItemQuantity(productId: string, quantity: number
             ...item, 
             quantity: Math.max(1, Math.min(quantity, 10)), // Limit quantity between 1 and 10
             price: product.price,
-            discountPrice: product.discountPrice
+            discountPrice: product.discountPrice || undefined
           };
         }
         return item;
