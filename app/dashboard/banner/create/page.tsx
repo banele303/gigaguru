@@ -145,8 +145,7 @@ export default function BannerRoute() {
                   }}
                   endpoint="bannerImageRoute"
                   config={{
-                    mode: "auto",
-                    maxFileSize: MAX_IMAGE_SIZE,
+                    mode: "auto"
                   }}
                 />
               )}
