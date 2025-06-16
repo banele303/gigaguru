@@ -7,6 +7,7 @@ import { ourFileRouter } from "./api/uploadthing/core";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "sonner";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
+import { CartProvider } from './context/CartContext';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,8 +40,10 @@ export default function RootLayout({
             routerConfig={extractRouterConfig(ourFileRouter)}
           />
           <PostHogProvider>
-            {children}
-            <Toaster position="top-center" richColors closeButton />
+            <CartProvider>
+              {children}
+              <Toaster position="top-center" richColors closeButton />
+            </CartProvider>
           </PostHogProvider>
         </ThemeProvider>
       </body>

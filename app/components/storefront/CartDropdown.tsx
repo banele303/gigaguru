@@ -77,7 +77,13 @@ export function CartDropdown({ itemCount, items: initialItems, onClose }: CartDr
     }
   };
 
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const total = items.reduce((sum, item) => {
+    const itemPrice = item.discountPrice && item.discountPrice < item.price ? item.discountPrice : item.price;
+    return sum + (itemPrice * item.quantity);
+  }, 0);
+
+  const originalTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const savings = originalTotal - total;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-end" onClick={onClose}>
@@ -106,75 +112,101 @@ export function CartDropdown({ itemCount, items: initialItems, onClose }: CartDr
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-6">
             {items.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center">
-                <ShoppingBag className="h-12 w-12 text-gray-300 mb-4" />
-                <p className="text-lg font-medium text-gray-900">Your bag is empty</p>
-                <p className="text-sm text-muted-foreground mt-1">Add some items to your bag to see them here</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">Your bag is empty</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-4 group">
-                    <div className="relative h-20 w-20 flex-shrink-0">
-                      <Image 
-                        src={item.imageUrl} 
-                        alt={item.name} 
-                        fill
-                        className="rounded-lg object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between">
-                        <h4 className="text-sm font-medium text-gray-900 truncate">{item.name}</h4>
-                        <p className="text-sm font-medium text-gray-900">{formatPrice(item.price * item.quantity)}</p>
+                {items.map((item) => {
+                  const itemTotal = item.discountPrice && item.discountPrice < item.price 
+                    ? item.discountPrice * item.quantity 
+                    : item.price * item.quantity;
+                  const itemOriginalTotal = item.price * item.quantity;
+                  const itemSavings = itemOriginalTotal - itemTotal;
+
+                  return (
+                    <div key={item.id} className="flex gap-4 group">
+                      <div className="relative h-20 w-20 flex-shrink-0">
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.name}
+                          fill
+                          className="object-cover rounded-md"
+                        />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {item.size && `Size: ${item.size}`}
-                        {item.color && ` • Color: ${item.color}`}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="flex items-center rounded-md border border-gray-200 bg-white">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between">
+                          <h4 className="text-sm font-medium text-gray-900 truncate">{item.name}</h4>
+                          {item.discountPrice && item.discountPrice < item.price ? (
+                            <div className="flex flex-col items-end">
+                              <p className="text-sm font-medium text-red-600">{formatPrice(itemTotal)}</p>
+                              <p className="text-xs text-gray-500 line-through">{formatPrice(itemOriginalTotal)}</p>
+                              <p className="text-xs text-green-600">Save {formatPrice(itemSavings)}</p>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-medium text-gray-900">{formatPrice(itemTotal)}</p>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {item.size && `Size: ${item.size}`}
+                          {item.color && ` • Color: ${item.color}`}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center rounded-md border border-gray-200 bg-white">
+                            <button
+                              type="button"
+                              onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                              className="p-1 text-gray-600 hover:bg-gray-50 rounded-l-md transition-colors disabled:opacity-50"
+                              disabled={item.quantity <= 1 || isUpdating[item.id]}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-medium text-gray-900">
+                              {isUpdating[item.id] ? '...' : item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                              className="p-1 text-gray-600 hover:bg-gray-50 rounded-r-md transition-colors disabled:opacity-50"
+                              disabled={item.quantity >= 10 || isUpdating[item.id]}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
                           <button
-                            type="button"
-                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                            className="p-1 text-gray-600 hover:bg-gray-50 rounded-l-md transition-colors disabled:opacity-50"
-                            disabled={item.quantity <= 1 || isUpdating[item.id]}
+                            onClick={() => handleQuantityChange(item.id, 0)}
+                            className="text-xs text-red-600 hover:text-red-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="w-8 text-center text-sm font-medium text-gray-900">
-                            {isUpdating[item.id] ? '...' : item.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                            className="p-1 text-gray-600 hover:bg-gray-50 rounded-r-md transition-colors disabled:opacity-50"
-                            disabled={item.quantity >= 10 || isUpdating[item.id]}
-                          >
-                            <Plus className="h-3 w-3" />
+                            Remove
                           </button>
                         </div>
-                        <button
-                          onClick={() => handleQuantityChange(item.id, 0)}
-                          className="text-xs text-red-600 hover:text-red-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          Remove
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
           {/* Footer */}
           <div className="p-6 border-t bg-gray-50">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-sm font-medium text-gray-900">Subtotal</span>
-              <span className="text-lg font-semibold text-gray-900">{formatPrice(total)}</span>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-900">Subtotal</span>
+                <span className="text-sm font-medium text-gray-900">{formatPrice(total)}</span>
+              </div>
+              {savings > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-900">Savings</span>
+                  <span className="text-sm font-medium text-green-600">-{formatPrice(savings)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                <span className="text-base font-semibold text-gray-900">Total</span>
+                <span className="text-base font-semibold text-gray-900">{formatPrice(total)}</span>
+              </div>
             </div>
-            <div className="space-y-3">
+            <div className="mt-6 space-y-3">
               <Button asChild className="w-full">
                 <Link href="/checkout" onClick={onClose}>Checkout</Link>
               </Button>

@@ -665,6 +665,7 @@ export async function addItemWithOptions(
           id: true,
           name: true,
           price: true,
+          discountPrice: true,
           images: true,
         },
         where: {
@@ -681,6 +682,7 @@ export async function addItemWithOptions(
         myCart.items = [
           {
             price: selectedProduct.price,
+            discountPrice: selectedProduct.discountPrice,
             id: selectedProduct.id,
             imageString: selectedProduct.images[0] || "",
             name: selectedProduct.name,
@@ -699,7 +701,11 @@ export async function addItemWithOptions(
 
         if (existingItemIndex !== -1) {
           // Update quantity of existing item
-          myCart.items[existingItemIndex].quantity = quantity;
+          myCart.items[existingItemIndex] = {
+            ...myCart.items[existingItemIndex],
+            quantity,
+            discountPrice: selectedProduct.discountPrice
+          };
         } else {
           // Add new item
           myCart.items.push({
@@ -707,6 +713,7 @@ export async function addItemWithOptions(
             imageString: selectedProduct.images[0] || "",
             name: selectedProduct.name,
             price: selectedProduct.price,
+            discountPrice: selectedProduct.discountPrice,
             quantity,
             size,
             color,
@@ -736,7 +743,7 @@ export async function delItem(formData: FormData) {
     const user = await getUser();
 
     if (!user) {
-      return redirect("/");
+      return { success: false, error: "User not authenticated" };
     }
 
     const productId = formData.get("productId");
@@ -754,16 +761,24 @@ export async function delItem(formData: FormData) {
       // Filter out the item to be removed
       const updatedItems = cart.items.filter(item => item.id !== productId);
       
-      // Update the cart with the filtered items
-      const updatedCart: Cart = {
-        ...cart,
-        items: updatedItems
-      };
+      // If no items left, delete the cart entirely
+      if (updatedItems.length === 0) {
+        await redis.del(`cart-${user.id}`);
+      } else {
+        // Update the cart with the filtered items
+        const updatedCart: Cart = {
+          ...cart,
+          items: updatedItems
+        };
+        // Save the updated cart back to Redis
+        await redis.set(`cart-${user.id}`, updatedCart);
+      }
 
-      // Save the updated cart back to Redis
-      await redis.set(`cart-${user.id}`, updatedCart);
-
+      // Revalidate all relevant paths
       revalidatePath("/", "layout");
+      revalidatePath("/bag", "page");
+      revalidatePath("/checkout", "page");
+
       return { success: true };
     } catch (error) {
       console.error("Error in delItem:", error);
@@ -787,21 +802,50 @@ export async function updateCartItemQuantity(productId: string, quantity: number
     try {
       let cart: Cart | null = await redis.get(`cart-${user.id}`);
 
-      if (cart && cart.items) {
-        const updatedItems = cart.items.map(item => {
-          if (item.id === productId) {
-            return { ...item, quantity: Math.max(1, Math.min(quantity, 10)) }; // Limit quantity between 1 and 10
-          }
-          return item;
-        });
-
-        cart.items = updatedItems;
-        await redis.set(`cart-${user.id}`, cart);
-        revalidatePath("/", "layout");
-        return { success: true };
+      if (!cart || !cart.items) {
+        return { success: false, error: "Cart not found" };
       }
 
-      return { success: false, error: "Cart not found" };
+      // Get the product details to ensure we have the latest price and discount
+      const product = await prisma.product.findUnique({
+        select: {
+          id: true,
+          price: true,
+          discountPrice: true,
+        },
+        where: {
+          id: productId,
+        },
+      });
+
+      if (!product) {
+        return { success: false, error: "Product not found" };
+      }
+
+      const updatedItems = cart.items.map(item => {
+        if (item.id === productId) {
+          return { 
+            ...item, 
+            quantity: Math.max(1, Math.min(quantity, 10)), // Limit quantity between 1 and 10
+            price: product.price,
+            discountPrice: product.discountPrice
+          };
+        }
+        return item;
+      });
+
+      // Update the cart with the new items
+      cart.items = updatedItems;
+      
+      // Save to Redis
+      await redis.set(`cart-${user.id}`, cart);
+
+      // Revalidate all relevant paths
+      revalidatePath("/", "layout");
+      revalidatePath("/bag", "page");
+      revalidatePath("/checkout", "page");
+
+      return { success: true };
     } catch (redisError) {
       console.error("Redis error in updateCartItemQuantity:", redisError);
       return { success: false, error: "Failed to update cart" };
