@@ -38,7 +38,9 @@ export function CartDropdown({ itemCount, items: initialItems, onClose }: CartDr
     try {
       if (newQuantity === 0) {
         // Delete item
-        const result = await delItem(itemId);
+        const formData = new FormData();
+        formData.append("productId", itemId);
+        const result = await delItem(formData);
         if (result?.success) {
           toast.success("Item removed from cart");
           // Refresh cart after deletion

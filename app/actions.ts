@@ -730,13 +730,18 @@ export async function addItemWithOptions(
   }
 }
 
-export async function delItem(productId: string) {
+export async function delItem(formData: FormData) {
   try {
     const { getUser } = getKindeServerSession();
     const user = await getUser();
 
     if (!user) {
       return redirect("/");
+    }
+
+    const productId = formData.get("productId");
+    if (!productId || typeof productId !== "string") {
+      return { success: false, error: "Invalid product ID" };
     }
 
     try {
