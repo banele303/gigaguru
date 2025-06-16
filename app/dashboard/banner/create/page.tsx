@@ -64,8 +64,7 @@ export default function BannerRoute() {
     }
 
     setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append("title", (e.target as HTMLFormElement).title.value);
+    const formData = new FormData(e.currentTarget);
     formData.append("imageString", image);
 
     try {
@@ -105,6 +104,7 @@ export default function BannerRoute() {
                 placeholder="Enter banner title"
                 required
                 disabled={isSubmitting}
+                defaultValue={fields.title.initialValue}
               />
               {fields.title.errors && (
                 <p className="text-sm text-red-500">{fields.title.errors}</p>
