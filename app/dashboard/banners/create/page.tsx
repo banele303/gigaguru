@@ -29,8 +29,8 @@ export default function CreateBannerPage() {
       return;
     }
 
-    if (!formData.title || !formData.description || !formData.link) {
-      toast.error('Please fill in all required fields');
+    if (!formData.title) {
+      toast.error('Please enter a title');
       return;
     }
 
@@ -42,8 +42,10 @@ export default function CreateBannerPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          imageUrl,
+          title: formData.title,
+          imageString: imageUrl,
+          description: formData.description || '',
+          link: formData.link || '',
         }),
       });
 
@@ -58,7 +60,7 @@ export default function CreateBannerPage() {
       router.refresh();
     } catch (error) {
       console.error('Error creating banner:', error);
-      toast.error(error instanceof Error ? error.message : 'Something went wrong');
+      toast.error(error instanceof Error ? error.message : 'Failed to create banner');
     } finally {
       setIsLoading(false);
     }
@@ -141,9 +143,8 @@ export default function CreateBannerPage() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                required
                 disabled={isLoading}
-                placeholder="Enter banner description"
+                placeholder="Enter banner description (optional)"
               />
             </div>
 
@@ -154,9 +155,8 @@ export default function CreateBannerPage() {
                 name="link"
                 value={formData.link}
                 onChange={handleChange}
-                required
                 disabled={isLoading}
-                placeholder="Enter banner link"
+                placeholder="Enter banner link (optional)"
               />
             </div>
 

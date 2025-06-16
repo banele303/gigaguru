@@ -8,15 +8,18 @@ export async function POST(req: Request) {
     const user = await getUser();
 
     if (!user || user.email !== "alexsouthflow2@gmail.com") {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     const body = await req.json();
-    const { title, imageString } = body;
+    const { title, imageString, description, link } = body;
 
     if (!title || !imageString) {
-      return new NextResponse(
-        JSON.stringify({ message: 'Missing required fields' }), 
+      return NextResponse.json(
+        { message: 'Title and image are required' },
         { status: 400 }
       );
     }
@@ -25,15 +28,18 @@ export async function POST(req: Request) {
       data: {
         title,
         imageString,
+        description: description || '',
+        link: link || '',
         createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
     return NextResponse.json(banner);
   } catch (error) {
     console.error('[BANNERS_POST]', error);
-    return new NextResponse(
-      JSON.stringify({ message: 'Internal server error' }), 
+    return NextResponse.json(
+      { message: 'Failed to create banner' },
       { status: 500 }
     );
   }
@@ -50,8 +56,8 @@ export async function GET() {
     return NextResponse.json(banners);
   } catch (error) {
     console.error('[BANNERS_GET]', error);
-    return new NextResponse(
-      JSON.stringify({ message: 'Internal server error' }), 
+    return NextResponse.json(
+      { message: 'Failed to fetch banners' },
       { status: 500 }
     );
   }

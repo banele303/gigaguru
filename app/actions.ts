@@ -477,34 +477,34 @@ export async function addReview(prevState: unknown, formData: FormData) {
 
 export async function createBanner(prevState: any, formData: FormData) {
   try {
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
 
-  if (!user || user.email !== "alexsouthflow2@gmail.com") {
+    if (!user || user.email !== "alexsouthflow2@gmail.com") {
       return { error: "Unauthorized" };
-  }
+    }
 
-  const submission = parseWithZod(formData, {
-    schema: bannerSchema,
-  });
+    const submission = parseWithZod(formData, {
+      schema: bannerSchema,
+    });
 
-  if (submission.status !== "success") {
-    return submission.reply();
-  }
+    if (submission.status !== "success") {
+      return submission.reply();
+    }
 
     const banner = await prisma.banner.create({
-    data: {
-      title: submission.value.title,
-        imageUrl: submission.value.imageString,
-        description: "", // Default empty description
-        link: "", // Default empty link
-    },
-  });
+      data: {
+        title: submission.value.title,
+        imageString: submission.value.imageString,
+        description: submission.value.description || "", // Default empty description
+        link: submission.value.link || "", // Default empty link
+      },
+    });
 
-    return NextResponse.json({ success: true, banner });
+    return { status: 'success', message: 'Banner created successfully', banner };
   } catch (error) {
     console.error("Error creating banner:", error);
-    return NextResponse.json({ error: "Failed to create banner" }, { status: 500 });
+    return { status: 'error', message: 'Failed to create banner' };
   }
 }
 
