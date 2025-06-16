@@ -51,6 +51,8 @@ export default function BannerRoute() {
       toast.success(lastResult.message);
       router.push("/dashboard/banner");
       router.refresh();
+    } else if (lastResult?.error) {
+      toast.error(lastResult.error);
     } else if (lastResult?.status === 'error') {
       toast.error(lastResult.message || 'Failed to create banner');
     }
