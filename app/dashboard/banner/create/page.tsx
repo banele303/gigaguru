@@ -56,7 +56,7 @@ export default function BannerRoute() {
     }
   }, [lastResult, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!image) {
       toast.error("Please upload an image");
