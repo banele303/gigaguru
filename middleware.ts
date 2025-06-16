@@ -8,7 +8,15 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ req }: { req: NextRequest }) => {
+      authorized: ({ req, token }) => {
+        // Allow all auth-related routes
+        if (req.nextUrl.pathname.startsWith('/api/auth')) {
+          return true;
+        }
+        // For protected routes, require authentication
+        if (req.nextUrl.pathname.startsWith('/dashboard') || req.nextUrl.pathname.startsWith('/bag')) {
+          return !!token;
+        }
         return true;
       },
     },

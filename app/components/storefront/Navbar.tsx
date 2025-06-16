@@ -24,11 +24,11 @@ import {
 function AuthButtons() {
   return (
     <div className="flex items-center gap-4">
-      <Button variant="secondary" asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
+      <Button variant="ghost" asChild className="hover:bg-secondary/80">
         <LoginLink>Sign in</LoginLink>
       </Button>
       <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-        <RegisterLink>Create Account</RegisterLink>
+        <RegisterLink>Sign up</RegisterLink>
       </Button>
     </div>
   );
