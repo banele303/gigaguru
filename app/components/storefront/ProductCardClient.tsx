@@ -110,7 +110,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
             ))}
           </CarouselContent>
         </Carousel>
-        <FavoriteButton productId={item.id} />
+        {item.id && <FavoriteButton productId={item.id} />}
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{item.name}</h3>
