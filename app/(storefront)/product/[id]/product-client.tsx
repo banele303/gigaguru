@@ -496,8 +496,85 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
   );
 }
 
+// Loading skeleton for product details
+function LoadingProductDetails() {
+  return (
+    <div className="flex flex-col gap-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Product Header Skeleton */}
+      <div className="space-y-6">
+        <div className="h-10 w-3/4 bg-gray-200 rounded animate-pulse" />
+        <div className="flex flex-col gap-4">
+          <div className="h-8 w-1/4 bg-gray-200 rounded animate-pulse" />
+          <div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse" />
+          <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </div>
+
+      {/* Description Skeleton */}
+      <div className="mt-8">
+        <div className="h-8 w-1/3 bg-gray-200 rounded animate-pulse mb-4" />
+        <div className="space-y-2">
+          <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-5/6 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-4/6 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </div>
+
+      {/* Form Skeleton */}
+      <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg border border-gray-100 space-y-6">
+        <div className="space-y-3">
+          <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse" />
+          <div className="flex gap-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-10 w-20 bg-gray-200 rounded animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse" />
+          <div className="flex gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-10 w-10 bg-gray-200 rounded-full animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-4 pt-4 border-t border-gray-200">
+          <div className="h-12 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-12 flex-1 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main Client Component
 export default function ProductClient({ product, averageRating, reviewCount, reviews }: ProductClientProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading state
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start lg:gap-x-24">
+          <div className="sticky top-4">
+            <div className="aspect-square w-full bg-gray-200 rounded-lg animate-pulse" />
+          </div>
+          <div>
+            <LoadingProductDetails />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start lg:gap-x-24">

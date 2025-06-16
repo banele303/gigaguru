@@ -13,14 +13,11 @@ export function CartIcon() {
   const fetchCart = async () => {
     const cart = await getCart();
     if (cart) {
-      // Map items and count unique products
-      const items = cart.items.map(item => ({
+      setCartItems(cart.items.map(item => ({
         ...item,
         imageUrl: item.imageString
-      }));
-      setCartItems(items);
-      // Count unique products (items with different IDs)
-      const uniqueProducts = new Set(items.map(item => item.id));
+      })));
+      const uniqueProducts = new Set(cart.items.map(item => item.productId));
       setItemCount(uniqueProducts.size);
     }
   };

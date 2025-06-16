@@ -477,29 +477,29 @@ export async function addReview(prevState: unknown, formData: FormData) {
 
 export async function createBanner(prevState: any, formData: FormData) {
   try {
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
 
-    if (!user || user.email !== "alexsouthflow2@gmail.com") {
+  if (!user || user.email !== "alexsouthflow2@gmail.com") {
       return { error: "Unauthorized" };
-    }
+  }
 
-    const submission = parseWithZod(formData, {
-      schema: bannerSchema,
-    });
+  const submission = parseWithZod(formData, {
+    schema: bannerSchema,
+  });
 
-    if (submission.status !== "success") {
-      return submission.reply();
-    }
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
 
     const banner = await prisma.banner.create({
-      data: {
-        title: submission.value.title,
+    data: {
+      title: submission.value.title,
         imageString: submission.value.imageString,
         description: submission.value.description || "", // Default empty description
         link: submission.value.link || "", // Default empty link
-      },
-    });
+    },
+  });
 
     return { status: 'success', message: 'Banner created successfully', banner };
   } catch (error) {
@@ -675,7 +675,7 @@ export async function addItemWithOptions(
       if (!selectedProduct) {
         return { success: false, error: "Product not found" };
       }
-
+      
       // If cart is empty or has no items
       if (!myCart.items || myCart.items.length === 0) {
         myCart.items = [
@@ -741,7 +741,7 @@ export async function delItem(productId: string) {
 
     try {
       const cart: Cart | null = await redis.get(`cart-${user.id}`);
-      
+
       if (!cart || !cart.items) {
         return { success: false, error: "Cart not found" };
       }
@@ -757,7 +757,7 @@ export async function delItem(productId: string) {
 
       // Save the updated cart back to Redis
       await redis.set(`cart-${user.id}`, updatedCart);
-      
+
       revalidatePath("/", "layout");
       return { success: true };
     } catch (error) {

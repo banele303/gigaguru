@@ -21,7 +21,7 @@ import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
 import { toast } from "sonner";
 
@@ -46,6 +46,16 @@ export default function BannerRoute() {
     shouldRevalidate: "onInput",
   });
 
+  useEffect(() => {
+    if (lastResult?.status === 'success') {
+      toast.success(lastResult.message);
+      router.push("/dashboard/banner");
+      router.refresh();
+    } else if (lastResult?.status === 'error') {
+      toast.error(lastResult.message || 'Failed to create banner');
+    }
+  }, [lastResult, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!image) {
@@ -53,21 +63,17 @@ export default function BannerRoute() {
       return;
     }
 
-    const formData = new FormData(e.target as HTMLFormElement);
+    setIsSubmitting(true);
+    const formData = new FormData();
+    formData.append("title", (e.target as HTMLFormElement).title.value);
     formData.append("imageString", image);
 
     try {
-      const result = await createBanner(null, formData);
-      
-      if (result.status === 'success') {
-        toast.success(result.message);
-        router.push("/dashboard/banners");
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
+      await action(formData);
     } catch (error) {
       toast.error("Failed to create banner. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,9 +100,7 @@ export default function BannerRoute() {
             <div className="flex flex-col gap-3">
               <Label>Title</Label>
               <Input
-                name={fields.title.name}
-                key={fields.title.key}
-                defaultValue={fields.title.initialValue}
+                name="title"
                 type="text"
                 placeholder="Enter banner title"
                 required
@@ -109,13 +113,6 @@ export default function BannerRoute() {
 
             <div className="flex flex-col gap-3">
               <Label>Image</Label>
-              <input
-                type="hidden"
-                value={image}
-                key={fields.imageString.key}
-                name={fields.imageString.name}
-                defaultValue={fields.imageString.initialValue}
-              />
               {image !== undefined ? (
                 <div className="relative">
                 <Image
