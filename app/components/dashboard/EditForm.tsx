@@ -100,7 +100,7 @@ export function EditForm({ data }: iAppProps) {
   const colorsRef = useRef<HTMLSelectElement>(null);
   const [isSale, setIsSale] = useState(data.isSale || false);
   const [discountPrice, setDiscountPrice] = useState<number | null>(data.discountPrice || null);
-  const [saleEndDate, setSaleEndDate] = useState<Date | null>(data.saleEndDate ? new Date(data.saleEndDate) : null);
+  const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(data.saleEndDate ? new Date(data.saleEndDate) : undefined);
   const [isUploadReady, setIsUploadReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
