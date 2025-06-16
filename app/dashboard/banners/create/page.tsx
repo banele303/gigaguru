@@ -116,8 +116,7 @@ export default function CreateBannerPage() {
                     console.error('Upload error:', error);
                   }}
                   config={{
-                    mode: "auto",
-                    maxFileSize: 5 * 1024 * 1024, // 5MB
+                    mode: "auto"
                   }}
                 />
               )}
