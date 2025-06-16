@@ -170,9 +170,11 @@ export function BagDisplay({ cart }: BagDisplayProps) {
             </div>
 
             <div className="mt-6">
-              <Button asChild className="w-full">
-                <Link href="/checkout">Checkout</Link>
-              </Button>
+              <form action={checkOut}>
+                <Button type="submit" className="w-full">
+                  Checkout
+                </Button>
+              </form>
             </div>
           </div>
         </div>

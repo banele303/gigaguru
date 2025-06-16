@@ -207,9 +207,11 @@ export function CartDropdown({ itemCount, items: initialItems, onClose }: CartDr
               </div>
             </div>
             <div className="mt-6 space-y-3">
-              <Button asChild className="w-full">
-                <Link href="/checkout" onClick={onClose}>Checkout</Link>
-              </Button>
+              <form action={checkOut}>
+                <Button type="submit" className="w-full">
+                  Checkout
+                </Button>
+              </form>
               <Button variant="outline" asChild className="w-full">
                 <Link href="/bag" onClick={onClose}>View Bag</Link>
               </Button>
