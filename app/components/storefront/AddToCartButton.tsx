@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { LoginLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { addItem } from "@/app/actions";
 
 interface AddToCartButtonProps {
@@ -36,6 +37,19 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       toast.error("Failed to add to cart");
     }
   };
+
+  if (!user) {
+    return (
+      <Button
+        size="icon"
+        variant="outline"
+        className="hover:bg-primary hover:text-white"
+        asChild
+      >
+        <LoginLink>Sign in to add to cart</LoginLink>
+      </Button>
+    );
+  }
 
   return (
     <Button
