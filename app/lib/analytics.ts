@@ -163,8 +163,6 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
 
     // Transform the data to match our interface
     return {
-      startDate,
-      endDate,
       pageViews: pageViews.result.map((item: any) => ({
         date: item.date,
         views: item.count,

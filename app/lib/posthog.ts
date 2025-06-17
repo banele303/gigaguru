@@ -38,13 +38,8 @@ if (typeof window !== "undefined") {
 export default posthog;
 
 export interface AnalyticsData {
-  startDate: Date;
-  endDate: Date;
-  pageViews: Array<{
-    date: string;
-    views: number;
-    uniqueVisitors: number;
-  }>;
+  totalRevenue: number;
+  totalOrders: number;
   revenueData: Array<{
     date: string;
     revenue: number;
@@ -52,9 +47,18 @@ export interface AnalyticsData {
     averageOrderValue: number;
   }>;
   userActivity: Array<{
-    action: string;
-    count: number;
-    conversionRate: number;
+    name: string;
+    value: number | string;
+  }>;
+  topProducts: Array<{
+    name: string;
+    views: number;
+    purchases: number;
+  }>;
+  pageViews: Array<{
+    date: string;
+    views: number;
+    uniqueVisitors: number;
   }>;
   userDemographics: Array<{
     country: string;
@@ -64,73 +68,10 @@ export interface AnalyticsData {
     device: string;
     users: number;
   }>;
-  topProducts: Array<{
-    name: string;
-    views: number;
-    purchases: number;
-  }>;
   funnelData: Array<{
     step: string;
     users: number;
     dropoff: number;
-  }>;
-  totalRevenue: number;
-  revenueGrowth: number;
-  activeUsers: number;
-  userGrowth: number;
-  uniqueVisitors: number;
-  averageTimeOnSite: number;
-  bounceRate: number;
-  topPages: Array<{
-    path: string;
-    views: number;
-  }>;
-  topReferrers: Array<{
-    source: string;
-    count: number;
-  }>;
-  deviceTypes: Array<{
-    type: string;
-    count: number;
-  }>;
-  browserTypes: Array<{
-    type: string;
-    count: number;
-  }>;
-  operatingSystems: Array<{
-    type: string;
-    count: number;
-  }>;
-  userRetention: Array<{
-    date: string;
-    returningUsers: number;
-    newUsers: number;
-  }>;
-  conversionFunnel: Array<{
-    step: string;
-    count: number;
-    dropoff: number;
-  }>;
-  revenueMetrics: {
-    totalRevenue: number;
-    averageOrderValue: number;
-    revenueByProduct: Array<{
-      productId: string;
-      revenue: number;
-    }>;
-  };
-  userBehavior: {
-    averageSessionDuration: number;
-    pagesPerSession: number;
-    exitPages: Array<{
-      path: string;
-      count: number;
-    }>;
-  };
-  searchAnalytics: Array<{
-    term: string;
-    count: number;
-    conversionRate: number;
   }>;
 }
 
