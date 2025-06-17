@@ -222,7 +222,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
       is_sale: product.isSale,
       discount_price: product.discountPrice,
     });
-  }, [product.id, product.sizes, product.colors]);
+  }, [product.id, product.sizes, product.colors, product.name, product.price, product.category, product.isSale, product.discountPrice]);
 
   // Add countdown timer effect
   useEffect(() => {

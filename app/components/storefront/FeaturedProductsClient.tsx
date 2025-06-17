@@ -6,8 +6,8 @@ import { Pagination } from "./Pagination";
 
 interface FeaturedProductsClientProps {
   products: Product[];
-  totalPages: number;
-  currentPage: number;
+  totalPages?: number;
+  currentPage?: number;
 }
 
 export function FeaturedProductsClient({ products, totalPages, currentPage }: FeaturedProductsClientProps) {
@@ -30,7 +30,9 @@ export function FeaturedProductsClient({ products, totalPages, currentPage }: Fe
                   <ProductCard key={item.id} item={item} />
                 ))}
               </div>
-              <Pagination totalPages={totalPages} currentPage={currentPage} />
+              {totalPages && currentPage && totalPages > 1 && (
+                <Pagination totalPages={totalPages} currentPage={currentPage} />
+              )}
             </div>
           ) : (
             <div className="text-center py-10">

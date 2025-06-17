@@ -4,8 +4,8 @@ import { Product } from "@/app/lib/zodSchemas";
 
 interface FeaturedProductsProps {
   products: Product[];
-  totalPages: number;
-  currentPage: number;
+  totalPages?: number;
+  currentPage?: number;
 }
 
 export default function FeaturedProducts({ products, totalPages, currentPage }: FeaturedProductsProps) {
