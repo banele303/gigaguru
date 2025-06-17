@@ -111,7 +111,7 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
     ]);
 
     // Get Prisma data
-    const [currentMonthRevenue, lastMonthRevenue, currentMonthUsers, lastMonthUsers] = await Promise.all([
+        const [currentMonthRevenue, lastMonthRevenue, currentMonthUsers, lastMonthUsers, totalOrders] = await Promise.all([
       // Get total revenue and growth
       prisma.order.aggregate({
         where: {
@@ -154,6 +154,16 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
           },
         },
       }),
+      // Get total orders
+      prisma.order.count({
+        where: {
+          createdAt: {
+            gte: startOfDay(startDate),
+            lte: endOfDay(endDate),
+          },
+          status: "completed",
+        },
+      }),
     ]);
 
     const totalRevenue = currentMonthRevenue._sum.amount || 0;
@@ -170,9 +180,8 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
       })),
 
       userActivity: userActivity.result.map((item: any) => ({
-        action: item.event,
-        count: item.count,
-        conversionRate: (item.count / pageViews.result[0].count) * 100,
+        name: item.event,
+        value: item.count,
       })),
 
       userDemographics: userDemographics.result.map((item: any) => ({
@@ -222,7 +231,7 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
       userRetention: [], // This would need to be calculated from user session data
       conversionFunnel: funnelData.result.map((step: any, index: number, array: any[]) => ({
         step: step.name,
-        count: step.count,
+        users: step.count,
         dropoff: index === 0 ? 0 : array[index - 1].count - step.count,
       })),
       revenueMetrics: {
@@ -241,6 +250,7 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
       searchAnalytics: [], // This would need to be fetched from search data
 
       // Add Prisma metrics
+      totalOrders,
       totalRevenue,
       revenueGrowth,
       activeUsers: currentMonthUsers,
