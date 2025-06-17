@@ -920,11 +920,11 @@ export async function checkOut() {
       success_url:
         process.env.NODE_ENV === "development"
           ? "http://localhost:3000/payment/success"
-          : "https://ecom-pro-coral.vercel.app/payment/success",
+          : "https://ecom-proe.vercel.app/payment/success",
       cancel_url:
         process.env.NODE_ENV === "development"
           ? "http://localhost:3000/payment/cancel"
-          : "https://ecom-pro-coral.vercel.app/payment/cancel",
+          : "https://ecom-proe.vercel.app/payment/cancel",
       metadata: {
         userId: user.id,
       },
