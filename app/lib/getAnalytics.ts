@@ -1,4 +1,4 @@
-import prisma from "./db";
+import { db as prisma } from "@/lib/db";
 
 export async function getAnalytics() {
   const orders = await prisma.order.findMany({
