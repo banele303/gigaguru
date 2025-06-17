@@ -20,15 +20,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 function AuthButtons() {
   return (
     <div className="flex items-center gap-4">
-      <Button variant="ghost" asChild className="hover:bg-secondary/80">
-        <LoginLink>Sign in</LoginLink>
+      <Button variant="ghost" asChild>
+      <LoginLink>Sign in</LoginLink>
       </Button>
       <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-        <RegisterLink>Sign up</RegisterLink>
+        <RegisterLink postLoginRedirectURL="/">Sign up</RegisterLink>
       </Button>
     </div>
   );

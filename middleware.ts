@@ -10,11 +10,11 @@ export default withAuth(
     callbacks: {
       authorized: ({ req, token }: { req: NextRequest; token: any }) => {
         // Allow all auth-related routes
-        if (req.nextUrl.pathname.startsWith('/api/auth')) {
+        if (req.nextUrl.pathname.startsWith('/api/authdfs')) {
           return true;
         }
         // For protected routes, require authentication
-        if (req.nextUrl.pathname.startsWith('/dashboard') || req.nextUrl.pathname.startsWith('/bag')) {
+        if (req.nextUrl.pathname.startsWith('/dashboarddd') || req.nextUrl.pathname.startsWith('/bagdd')) {
           return !!token;
         }
         return true;
@@ -25,8 +25,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/bag/:path*",
-    "/api/auth/:path*"
+    
   ],
 }; 
