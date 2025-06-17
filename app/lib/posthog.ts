@@ -38,6 +38,13 @@ if (typeof window !== "undefined") {
 export default posthog;
 
 export interface AnalyticsData {
+  uniqueVisitors: number;
+  averageTimeOnSite: number;
+  bounceRate: number;
+  topPages: Array<{ path: string; views: number }>;
+  topReferrers: Array<{ source: string; views: number }>;
+  deviceTypes: Array<{ type: string; count: number }>;
+  browserTypes: Array<{ type: string; count: number }>;
   totalRevenue: number;
   totalOrders: number;
   revenueData: Array<{
