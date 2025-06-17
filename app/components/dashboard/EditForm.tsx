@@ -356,37 +356,34 @@ export function EditForm({ data }: iAppProps) {
                     name="images"
                     value={JSON.stringify(images)}
                   />
-                  {images.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {images.map((image, index) => (
-                        <div key={index} className="relative w-full h-24">
-                          <Image
-                            fill
-                            src={image}
-                            alt="Product Image"
-                            className="w-full h-full object-cover rounded-lg border"
-                          />
-                          <button
-                            onClick={() => handleDelete(index)}
-                            type="button"
-                            className="absolute -top-2 -right-2 bg-red-500 p-1.5 rounded-lg text-white"
-                          >
-                            <XIcon className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <UploadDropzone
-                      endpoint="imageUploader"
-                      onClientUploadComplete={(res) => {
-                        setImages(res.map((r) => r.url));
-                      }}
-                      onUploadError={() => {
-                        alert("Something went wrong");
-                      }}
-                    />
-                  )}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
+                    {images.map((image, index) => (
+                      <div key={index} className="relative w-full h-24">
+                        <Image
+                          fill
+                          src={image}
+                          alt="Product Image"
+                          className="w-full h-full object-cover rounded-lg border"
+                        />
+                        <button
+                          onClick={() => handleDelete(index)}
+                          type="button"
+                          className="absolute -top-2 -right-2 bg-red-500 p-1.5 rounded-lg text-white"
+                        >
+                          <XIcon className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <UploadDropzone
+                    endpoint="imageUploader"
+                    onClientUploadComplete={(res) => {
+                      setImages([...images, ...res.map((r) => r.url)]);
+                    }}
+                    onUploadError={() => {
+                      alert("Something went wrong");
+                    }}
+                  />
                 </div>
               </CardContent>
             </Card>
