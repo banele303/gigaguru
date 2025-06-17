@@ -36,9 +36,14 @@ export interface ProductWithReviews {
   colors: string[];
   reviews: Review[];
   quantity: number;
+  views: number;
 }
 
 async function getProductData(productId: string) {
+  await prisma.product.update({
+    where: { id: productId },
+    data: { views: { increment: 1 } },
+  });
   noStore();
   try {
     const product = await prisma.product.findFirst({
@@ -66,6 +71,7 @@ async function getProductData(productId: string) {
         material: true,
         createdAt: true,
         updatedAt: true,
+        views: true,
         reviews: {
           select: {
             id: true,
@@ -101,6 +107,8 @@ async function getProductData(productId: string) {
 
     const reviews = typedProduct.reviews || [];
 
+    const views = (product as any).views ?? 0;
+
     const averageRating =
       reviews.length > 0
         ? reviews.reduce((sum, review) => sum + review.rating, 0) /
@@ -112,6 +120,7 @@ async function getProductData(productId: string) {
       reviews,
       averageRating,
       reviewCount: reviews.length,
+      views,
     };
   } catch (error) {
     console.error("Error fetching product data:", error);
@@ -158,7 +167,7 @@ export default async function ProductPage({
 }: {
   params: { id: string };
 }) {
-  const { product, reviews, averageRating, reviewCount } = await getProductData(
+  const { product, reviews, averageRating, reviewCount, views } = await getProductData(
     params.id
   );
   const featuredProducts = await getFeaturedProducts();
@@ -166,7 +175,8 @@ export default async function ProductPage({
   return (
     <>
       <ProductClient
-        product={product}
+        product={{ ...product, views }}
+
         reviews={reviews}
         averageRating={averageRating}
         reviewCount={reviewCount}

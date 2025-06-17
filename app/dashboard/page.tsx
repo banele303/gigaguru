@@ -29,6 +29,7 @@ type ProductData = {
   name: string;
   images: string[];
   category: string;
+  views: number | null;
 };
 
 type ProductResult = {
@@ -80,9 +81,10 @@ async function getData() {
         name: true,
         images: true,
         category: true,
+        views: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        views: 'desc',
       },
       take: 5,
     }),
@@ -124,7 +126,7 @@ async function getData() {
     id: product.id,
     name: product.name,
     image: product.images[0],
-    views: 0, // Default to 0 until views are implemented
+    views: product.views ?? 0,
     category: product.category,
   }));
 

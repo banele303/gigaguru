@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { redis } from "@/app/lib/redis";
 import { stripe } from "@/app/lib/stripe";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -38,6 +39,8 @@ export async function POST(req: Request) {
       });
 
       await redis.del(`cart-${session.metadata?.userId}`);
+
+      revalidatePath("/dashboard");
       break;
     }
     default: {

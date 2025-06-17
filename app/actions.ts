@@ -842,17 +842,24 @@ export async function checkOut() {
     }
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
-      cart.items.map((item) => ({
-        price_data: {
-          currency: "zar",
-          unit_amount: (item.discountPrice ?? item.price) * 100,
-          product_data: {
-            name: item.name,
-            images: [item.imageString || ''],
+      cart.items.map((item) => {
+        const productData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData.ProductData = {
+          name: item.name,
+        };
+
+        if (item.imageString) {
+          productData.images = [item.imageString];
+        }
+
+        return {
+          price_data: {
+            currency: "zar",
+            unit_amount: (item.discountPrice ?? item.price) * 100,
+            product_data: productData,
           },
-        },
-        quantity: item.quantity || 1,
-      }));
+          quantity: item.quantity || 1,
+        };
+      });
 
     console.log("Creating Stripe session for user:", user.id);
 
