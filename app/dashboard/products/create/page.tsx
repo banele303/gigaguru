@@ -75,88 +75,42 @@ export default function ProductCreateRoute() {
     setSelectedColors(selectedColors.filter(c => c !== color));
   };
 
-  const initialState = undefined;
-  const [lastResult, action] = useFormState(createProduct, initialState);
+  const [lastResult, action] = useFormState(createProduct, undefined);
   const router = useRouter();
-
-  useEffect(() => {
-    if (lastResult && "message" in lastResult) {
-      if (lastResult.status === "success") {
-        toast.success(lastResult.message);
-        router.push("/dashboard/products");
-      } else if (lastResult.status === "error") {
-        toast.error(lastResult.message);
-      }
-    }
-  }, [lastResult, router]);
-
-  useEffect(() => {
-    // Ensure the component is mounted before enabling uploads
-    setIsUploadReady(true);
-  }, []);
 
   const [form, fields] = useForm({
     lastResult,
     onValidate({ formData }) {
-      console.log("Form validation started");
-      formData.set("images", JSON.stringify(images));
-      formData.set("sizes", JSON.stringify(selectedSizes));
-      formData.set("colors", JSON.stringify(selectedColors));
-      const result = parseWithZod(formData, { schema: createProductSchema });
-      console.log("Validation result:", result);
-      return result;
+      const parsed = parseWithZod(formData, { schema: createProductSchema });
+      return parsed;
     },
-    shouldValidate: "onSubmit",
-    shouldRevalidate: "onSubmit",
+    shouldValidate: "onBlur",
   });
+
+  useEffect(() => {
+    if (lastResult?.status === "success") {
+      toast.success(lastResult.message);
+      router.push("/dashboard/products");
+    } else if (lastResult?.status === "error") {
+      toast.error(lastResult.message);
+    }
+  }, [lastResult, router]);
 
   const handleDelete = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    if (images.length === 0) {
-      toast.error("Please upload at least one image");
-      return;
-    }
-    
-    const formData = new FormData(e.currentTarget);
-    
-    formData.set("images", JSON.stringify(images));
-    formData.set("sizes", JSON.stringify(selectedSizes));
-    formData.set("colors", JSON.stringify(selectedColors));
-    
-    if (saleEndDate) {
-      // Ensure the date is in UTC format
-      const utcDate = new Date(saleEndDate.getTime() - saleEndDate.getTimezoneOffset() * 60000);
-      formData.set("saleEndDate", utcDate.toISOString());
-    }
-    
-    formData.set("isSale", String(isSale));
-    
-    if (discountPrice) {
-      formData.set("discountPrice", String(discountPrice));
-    }
-    
-    console.log("Submitting form data:", {
-      images,
-      sizes: selectedSizes,
-      colors: selectedColors,
-      saleEndDate: saleEndDate ? new Date(saleEndDate.getTime() - saleEndDate.getTimezoneOffset() * 60000).toISOString() : null,
-      isSale: isSale,
-      discountPrice: discountPrice
-    });
-    
-    await action(formData);
-  };
-
   return (
-    <form 
-      id={form.id} 
-      onSubmit={handleSubmit}
+    <form
+      action={async (formData) => {
+        formData.set("images", JSON.stringify(images));
+        formData.set("sizes", JSON.stringify(selectedSizes));
+        formData.set("colors", JSON.stringify(selectedColors));
+        await action(formData);
+      }}
       className="max-w-7xl mx-auto"
+      id={form.id}
+      onSubmit={form.onSubmit}
     >
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" size="icon" asChild className="rounded-full shadow-sm hover:shadow-md transition-shadow">

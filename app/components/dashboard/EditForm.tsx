@@ -183,6 +183,8 @@ export function EditForm({ data }: iAppProps) {
     formData.set("quantity", formData.get("quantity") as string || "0");
     formData.set("productId", data.id);
 
+    console.log(`Submitting update for product ID: ${data.id}`);
+
     try {
       const response = await fetch(`/api/products/${data.id}`, {
         method: 'PUT',
