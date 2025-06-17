@@ -178,8 +178,6 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         material: submission.value.material || null,
         userId: user.id,
         isSale: isSale,
-        saleEndDate: saleEndDate,
-        discountPrice: discountPrice,
       },
     });
     
@@ -630,7 +628,7 @@ export async function addItem(productId: string) {
 
       await redis.set(`cart-${user.id}`, myCart);
 
-      revalidatePath("/", "layout");
+      revalidateTag("cart");
       return { success: true };
       
     } catch (dbError) {
@@ -737,7 +735,7 @@ export async function addItemWithOptions(
       // Save cart to Redis
       await redis.set(`cart-${user.id}`, myCart);
       
-      revalidatePath("/", "layout");
+      revalidateTag("cart");
       return { success: true };
       
     } catch (dbError) {
@@ -787,10 +785,7 @@ export async function delItem(formData: FormData) {
         await redis.set(`cart-${user.id}`, updatedCart);
       }
 
-      // Revalidate all relevant paths
-      revalidatePath("/", "layout");
-      revalidatePath("/bag", "page");
-      revalidatePath("/checkout", "page");
+      revalidateTag("cart");
 
       return { success: true };
     } catch (error) {
@@ -853,10 +848,7 @@ export async function updateCartItemQuantity(productId: string, quantity: number
       // Save to Redis
       await redis.set(`cart-${user.id}`, cart);
 
-      // Revalidate all relevant paths
-      revalidatePath("/", "layout");
-      revalidatePath("/bag", "page");
-      revalidatePath("/checkout", "page");
+      revalidateTag("cart");
 
       return { success: true };
     } catch (redisError) {
