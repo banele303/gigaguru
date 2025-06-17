@@ -80,7 +80,7 @@ export default function AnalyticsClient({ initialData }: AnalyticsClientProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
           <p className="text-muted-foreground">
-            Your store's performance from{" "}
+            Your store&apos;s performance from{" "}
             <strong>{formatDate(data.startDate.toString())}</strong> to{" "}
             <strong>{formatDate(data.endDate.toString())}</strong>
           </p>

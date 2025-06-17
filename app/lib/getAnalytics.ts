@@ -92,9 +92,9 @@ export async function getAnalytics(startDate?: Date, endDate?: Date) {
   const userIds = topCustomersResult.map((c) => c.userId).filter((id): id is string => id !== null);
   const users = await prisma.user.findMany({
     where: { id: { in: userIds } },
-    select: { id: true, given_name: true },
+    select: { id: true, firstName: true, lastName: true },
   });
-  const userMap = new Map(users.map((u) => [u.id, u.given_name]));
+  const userMap = new Map(users.map((u) => [u.id, `${u.firstName} ${u.lastName}`]));
   const topCustomers = topCustomersResult.map((c) => ({
     name: c.userId ? userMap.get(c.userId) || "Unknown User" : "Unknown User",
     totalSpent: c._sum.amount || 0,
