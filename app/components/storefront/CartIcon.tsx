@@ -2,31 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { ShoppingBagIcon } from 'lucide-react';
-import { getCart } from '@/app/actions';
+import { useCart } from '@/app/context/CartContext';
 import { CartDropdown } from './CartDropdown';
 
 export function CartIcon() {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [cartItems, setCartItems] = useState<any[]>([]);
-  const [itemCount, setItemCount] = useState(0);
-
-  const fetchCart = async () => {
-    const cart = await getCart();
-    if (cart) {
-      setCartItems(cart.items.map(item => ({
-        ...item,
-        imageUrl: item.imageString
-      })));
-      const uniqueProducts = new Set(cart.items.map(item => item.id));
-      setItemCount(uniqueProducts.size);
-    }
-  };
-
-  useEffect(() => {
-    if (showDropdown) {
-      fetchCart();
-    }
-  }, [showDropdown]);
+  const { itemCount } = useCart();
 
   return (
     <>
@@ -43,11 +24,7 @@ export function CartIcon() {
       </button>
 
       {showDropdown && (
-        <CartDropdown
-          itemCount={itemCount}
-          items={cartItems}
-          onClose={() => setShowDropdown(false)}
-        />
+        <CartDropdown onClose={() => setShowDropdown(false)} />
       )}
     </>
   );

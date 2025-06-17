@@ -8,7 +8,8 @@ import { parseWithZod } from '@conform-to/zod';
 import { Minus, Plus, Check, ShoppingBag, X } from 'lucide-react';
 import StarRatings from 'react-star-ratings';
 import { reviewSchema } from '@/app/lib/zodSchemas';
-import { addReview, addItemWithOptions, getCart, updateCartItemQuantity } from '@/app/actions';
+import { addReview, addItemWithOptions } from '@/app/actions';
+import { useCart } from '@/app/context/CartContext';
 import { SubmitButton } from '@/app/components/SubmitButtons';
 import { ImageSlider } from '@/app/components/storefront/ImageSlider';
 import { Button } from '@/components/ui/button';
@@ -201,8 +202,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [showCartDropdown, setShowCartDropdown] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState<number>(0);
-  const [cartItems, setCartItems] = useState<CartItemWithImage[]>([]);
+  const { refreshCart } = useCart();
 
   useEffect(() => {
     if (product.sizes && product.sizes.length > 0) {
@@ -281,15 +281,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
           discount_price: product.discountPrice,
         });
 
-        // Update cart count and show dropdown
-        const updatedCart = await getCart();
-        if (updatedCart) {
-          setCartItemCount(updatedCart.items.length);
-          setCartItems(updatedCart.items.map(item => ({
-            ...item,
-            imageUrl: item.imageString,
-          })));
-        }
+        refreshCart();
         setShowCartDropdown(true);
       }
     } catch (error) {
@@ -486,11 +478,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
 
       {/* Cart Dropdown */}
       {showCartDropdown && (
-        <CartDropdown
-          itemCount={cartItemCount}
-          items={cartItems}
-          onClose={() => setShowCartDropdown(false)}
-        />
+        <CartDropdown onClose={() => setShowCartDropdown(false)} />
       )}
     </div>
   );

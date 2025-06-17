@@ -2,6 +2,7 @@
 
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import { parse } from "@conform-to/dom";
 import { parseWithZod } from "@conform-to/zod";
 import { bannerSchema, createProductSchema, productSchema, reviewSchema } from "./lib/zodSchemas";
@@ -457,8 +458,7 @@ export async function addReview(prevState: unknown, formData: FormData) {
       },
     });
 
-    revalidatePath(`/product/${productId}`);
-    revalidatePath(`/dashboard/products/${productId}`);
+    revalidateTag("cart");
 
     return {
       status: 'success' as const,
@@ -513,8 +513,8 @@ export async function createBanner(prevState: any, formData: FormData) {
     return {
       status: "error" as const,
       error: {
-        _errors: ["Failed to create banner"]
-      }
+        _errors: ["Failed to create banner"],
+      },
     };
   }
 }
@@ -527,16 +527,30 @@ export async function deleteBanner(formData: FormData) {
     return redirect("/");
   }
 
-  await prisma.banner.delete({
-    where: {
-      id: formData.get("bannerId") as string,
-    },
-  });
+  const bannerId = formData.get("bannerId");
 
-  redirect("/dashboard/banner");
+  if (!bannerId || typeof bannerId !== "string") {
+    throw new Error("Invalid banner ID");
+  }
+
+  try {
+    await prisma.banner.delete({
+      where: {
+        id: bannerId,
+      },
+    });
+
+    revalidateTag("banners");
+
+    return redirect("/dashboard/banners");
+  } catch (error) {
+    console.error("Error deleting banner:", error);
+    throw new Error("Failed to delete banner");
+  }
 }
 
 export async function getCart(): Promise<Cart | null> {
+  noStore();
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
@@ -562,79 +576,53 @@ export async function addItem(productId: string) {
       return { success: false, error: "User not authenticated" };
     }
 
-    // Create a default cart
     let myCart: Cart = { userId: user.id, items: [] };
-    
     try {
-      // Try to get the existing cart
       const cart: Cart | null = await redis.get(`cart-${user.id}`);
       if (cart && cart.items) {
         myCart = cart;
       }
     } catch (redisError) {
       console.error("Error fetching cart from Redis:", redisError);
-      // Continue with the default cart
     }
 
-    try {
-      const selectedProduct = await prisma.product.findUnique({
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          images: true,
-        },
-        where: {
-          id: productId,
-        },
+    const selectedProduct = await prisma.product.findUnique({
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        discountPrice: true,
+        images: true,
+      },
+      where: {
+        id: productId,
+      },
+    });
+
+    if (!selectedProduct) {
+      return { success: false, error: "Product not found" };
+    }
+
+    const existingItem = myCart.items.find((item) => item.id === productId);
+
+    if (existingItem) {
+      existingItem.quantity = (existingItem.quantity || 0) + 1;
+    } else {
+      myCart.items.push({
+        id: selectedProduct.id,
+        imageString: selectedProduct.images[0] || "",
+        name: selectedProduct.name,
+        price: selectedProduct.price,
+        discountPrice: selectedProduct.discountPrice || undefined,
+        quantity: 1,
       });
-
-      if (!selectedProduct) {
-        console.error("Product not found:", productId);
-        return { success: false, error: "Product not found" };
-      }
-      
-      if (!myCart.items || myCart.items.length === 0) {
-        myCart.items = [
-          {
-            price: selectedProduct.price,
-            id: selectedProduct.id,
-            imageString: selectedProduct.images[0] || "",
-            name: selectedProduct.name,
-            quantity: 1,
-          },
-        ];
-      } else {
-        let itemFound = false;
-
-        myCart.items = myCart.items.map((item) => {
-          if (item.id === productId) {
-            itemFound = true;
-            item.quantity = (item.quantity || 0) + 1;
-          }
-          return item;
-        });
-
-        if (!itemFound) {
-          myCart.items.push({
-            id: selectedProduct.id,
-            imageString: selectedProduct.images[0] || "",
-            name: selectedProduct.name,
-            price: selectedProduct.price,
-            quantity: 1,
-          });
-        }
-      }
-
-      await redis.set(`cart-${user.id}`, myCart);
-
-      revalidateTag("cart");
-      return { success: true };
-      
-    } catch (dbError) {
-      console.error("Database error:", dbError);
-      return { success: false, error: "Database error" };
     }
+
+    await redis.set(`cart-${user.id}`, myCart);
+
+    revalidateTag("cart");
+
+    return { success: true };
   } catch (error) {
     console.error("Error in addItem:", error);
     return { success: false, error: "An unexpected error occurred" };
@@ -652,96 +640,51 @@ export async function addItemWithOptions(
     const user = await getUser();
 
     if (!user) {
-      return redirect("/");
+      return { success: false, error: "User not authenticated" };
     }
 
-    // Create a cart object to hold our data
     let myCart: Cart = { userId: user.id, items: [] };
-    
     try {
-      // Try to fetch existing cart, but handle case where it might not exist
       const cart: Cart | null = await redis.get(`cart-${user.id}`);
-      
-      if (cart && cart.items) {
+      if (cart) {
         myCart = cart;
       }
     } catch (redisError) {
       console.error("Error fetching cart from Redis:", redisError);
-      // We'll continue with an empty cart
     }
 
-    try {
-      const selectedProduct = await prisma.product.findUnique({
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          discountPrice: true,
-          images: true,
-        },
-        where: {
-          id: productId,
-        },
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, name: true, price: true, discountPrice: true, images: true },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    const existingItemIndex = myCart.items.findIndex(
+      (item) => item.id === productId && item.size === size && item.color === color
+    );
+
+    if (existingItemIndex > -1) {
+      myCart.items[existingItemIndex].quantity += quantity;
+    } else {
+      myCart.items.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        discountPrice: product.discountPrice ?? undefined,
+        imageString: product.images[0] ?? "",
+        quantity,
+        size,
+        color,
       });
-
-      if (!selectedProduct) {
-        return { success: false, error: "Product not found" };
-      }
-      
-      // If cart is empty or has no items
-      if (!myCart.items || myCart.items.length === 0) {
-        myCart.items = [
-          {
-            price: selectedProduct.price,
-            discountPrice: selectedProduct.discountPrice || undefined,
-            id: selectedProduct.id,
-            imageString: selectedProduct.images[0] || "",
-            name: selectedProduct.name,
-            quantity,
-            size,
-            color,
-          },
-        ];
-      } else {
-        // Check if the exact same variant exists in the cart
-        const existingItemIndex = myCart.items.findIndex(
-          item => item.id === productId && 
-                 item.size === size && 
-                 item.color === color
-        );
-
-        if (existingItemIndex !== -1) {
-          // Update quantity of existing item
-          myCart.items[existingItemIndex] = {
-            ...myCart.items[existingItemIndex],
-            quantity,
-            discountPrice: selectedProduct.discountPrice || undefined
-          };
-        } else {
-          // Add new item
-          myCart.items.push({
-            id: selectedProduct.id,
-            imageString: selectedProduct.images[0] || "",
-            name: selectedProduct.name,
-            price: selectedProduct.price,
-            discountPrice: selectedProduct.discountPrice || undefined,
-            quantity,
-            size,
-            color,
-          });
-        }
-      }
-
-      // Save cart to Redis
-      await redis.set(`cart-${user.id}`, myCart);
-      
-      revalidateTag("cart");
-      return { success: true };
-      
-    } catch (dbError) {
-      console.error("Database error:", dbError);
-      return { success: false, error: "Error accessing product database" };
     }
+
+    await redis.set(`cart-${user.id}`, myCart);
+    revalidateTag("cart");
+
+    return { success: true };
   } catch (error) {
     console.error("Error in addItemWithOptions:", error);
     return { success: false, error: "An unexpected error occurred" };
@@ -885,11 +828,10 @@ export async function checkOut() {
         if (cart) break;
       } catch (redisError) {
         console.error(`Redis error on attempt ${retryCount + 1}:`, redisError);
-        retryCount++;
-        if (retryCount === maxRetries) {
-          throw new Error("Failed to retrieve cart after multiple attempts");
-        }
-        // Wait for 1 second before retrying
+      }
+      
+      retryCount++;
+      if (retryCount < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -902,8 +844,8 @@ export async function checkOut() {
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
       cart.items.map((item) => ({
         price_data: {
-          currency: "usd",
-          unit_amount: item.price * 100,
+          currency: "zar",
+          unit_amount: (item.discountPrice ?? item.price) * 100,
           product_data: {
             name: item.name,
             images: [item.imageString || ''],
@@ -938,11 +880,33 @@ export async function checkOut() {
       return redirect("/bag?error=checkout-failed");
     }
   } catch (error) {
+    // The `isRedirectError` function was removed in Next.js 14.
+    // The new way to handle redirect errors is to check for a specific digest property on the error object.
+    if (
+      error instanceof Error &&
+      'digest' in error &&
+      typeof (error as any).digest === 'string' &&
+      (error as any).digest.startsWith('NEXT_REDIRECT')
+    ) {
+      throw error;
+    }
+
     console.error("Error in checkOut:", error);
     if (error instanceof Error) {
       console.error("Error details:", error.message);
     }
     return redirect("/bag?error=cart-retrieval");
+  }
+}
+
+export async function clearCart(userId: string) {
+  try {
+    await redis.del(`cart-${userId}`);
+    revalidateTag("cart");
+    return { success: true };
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+    return { success: false, error: "Failed to clear cart." };
   }
 }
 

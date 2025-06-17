@@ -1,7 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { NavbarLinks } from "./NavbarLinks";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { Menu } from "lucide-react";
 import { UserDropdown } from "./UserDropdown";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,6 @@ import {
   LoginLink,
   RegisterLink,
 } from "@kinde-oss/kinde-auth-nextjs/components";
-import { redis } from "@/app/lib/redis";
-import { Cart } from "@/app/lib/interfaces";
 import { SearchBar } from "./SearchBar";
 import { CartIcon } from "./CartIcon";
 import {
@@ -28,27 +27,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useCart } from "@/app/context/CartContext";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 function AuthButtons() {
   return (
     <div className="flex items-center gap-4">
       <Button variant="ghost" asChild>
-      <LoginLink>Sign in</LoginLink>
+        <LoginLink>Sign in</LoginLink>
       </Button>
-      <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+      <Button
+        asChild
+        className="bg-primary text-primary-foreground hover:bg-primary/90"
+      >
         <RegisterLink postLoginRedirectURL="/">Sign up</RegisterLink>
       </Button>
     </div>
   );
 }
 
-export async function Navbar() {
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
-
-  const cart: Cart | null = await redis.get(`cart-${user?.id}`);
-
-  const uniqueProducts = cart?.items ? new Set(cart.items.map(item => item.id)).size : 0;
+export function Navbar() {
+  const { user } = useKindeBrowserClient();
+  const { itemCount } = useCart();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white">

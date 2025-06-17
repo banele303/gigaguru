@@ -5,6 +5,7 @@ import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { addItem } from "@/app/actions";
+import { useCart } from "@/app/context/CartContext";
 
 interface AddToCartButtonProps {
   product: {
@@ -17,12 +18,14 @@ interface AddToCartButtonProps {
 
 export function AddToCartButton({ product }: AddToCartButtonProps) {
   const { user } = useKindeBrowserClient();
+  const { refreshCart } = useCart();
 
   const handleAddToCart = async () => {
     try {
       const result = await addItem(product.id);
       if (result?.success) {
         toast.success("Added to cart");
+        await refreshCart();
       } else {
         toast.error(result?.error || "Failed to add to cart");
       }
