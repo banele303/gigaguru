@@ -38,6 +38,8 @@ if (typeof window !== "undefined") {
 export default posthog;
 
 export interface AnalyticsData {
+  startDate: Date;
+  endDate: Date;
   pageViews: Array<{
     date: string;
     views: number;

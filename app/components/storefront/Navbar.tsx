@@ -33,13 +33,13 @@ import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 function AuthButtons() {
   return (
     <div className="flex items-center gap-4">
-      <Button variant="ghost" asChild>
-        <LoginLink>Sign in</LoginLink>
-      </Button>
       <Button
         asChild
         className="bg-primary text-primary-foreground hover:bg-primary/90"
       >
+        <LoginLink>Sign in</LoginLink>
+      </Button>
+      <Button variant="ghost" asChild>
         <RegisterLink postLoginRedirectURL="/">Sign up</RegisterLink>
       </Button>
     </div>

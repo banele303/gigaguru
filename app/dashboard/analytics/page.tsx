@@ -1,9 +1,22 @@
 import AnalyticsClient from "@/app/components/dashboard/analytics/AnalyticsClient";
+import { getAnalytics } from "@/app/lib/getAnalytics";
 
-export default function AnalyticsPage() {
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const from = searchParams?.from as string | undefined;
+  const to = searchParams?.to as string | undefined;
+
+  const analyticsData = await getAnalytics(
+    from ? new Date(from) : undefined,
+    to ? new Date(to) : undefined
+  );
+
   return (
     <div>
-      <AnalyticsClient />
+      <AnalyticsClient initialData={analyticsData} />
     </div>
   );
 } 
