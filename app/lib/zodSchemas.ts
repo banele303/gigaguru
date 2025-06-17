@@ -85,6 +85,12 @@ export const updateProductSchema = z.object({
   material: z.string().optional().nullable(),
 });
 
+export const createReviewSchema = z.object({
+  rating: z.coerce.number().min(1).max(5, "Rating must be between 1 and 5"),
+  comment: z.string().optional(),
+  productId: z.string(),
+});
+
 export const reviewSchema = z.object({
   id: z.string(),
   rating: z.coerce.number().min(1).max(5, "Rating must be between 1 and 5"),

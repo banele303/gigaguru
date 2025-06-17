@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { parse } from "@conform-to/dom";
 import { parseWithZod } from "@conform-to/zod";
-import { bannerSchema, createProductSchema, productSchema, reviewSchema } from "./lib/zodSchemas";
+import { bannerSchema, createProductSchema, productSchema, reviewSchema, createReviewSchema } from "./lib/zodSchemas";
 import { prisma } from "@/lib/db";
 import { redis } from "./lib/redis";
 import { Cart } from "./lib/interfaces";
@@ -392,7 +392,7 @@ export async function addReview(prevState: unknown, formData: FormData) {
 
   try {
     const submission = parseWithZod(formData, {
-      schema: reviewSchema,
+      schema: createReviewSchema,
     });
 
     if (submission.status !== "success") {

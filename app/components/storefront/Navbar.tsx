@@ -51,8 +51,8 @@ export function Navbar() {
   const { itemCount } = useCart();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-white">
-      <nav className="container mx-auto flex items-center justify-between p-4">
+    <header className="sticky top-0 z-40 w-full bg-white">
+      <nav className="container mx-auto flex items-center justify-between p-2">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center">
             <Image

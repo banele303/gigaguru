@@ -92,10 +92,10 @@ function ReviewForm({ productId }: { productId: string }) {
                 action(formData);
             }}
         >
-            <h3 className="text-lg font-medium">Write a Review</h3>
+            <h3 className="text-lg font-medium text-gray-900">Write a Review</h3>
             <input type="hidden" name="productId" value={productId} />
             <div>
-                <label htmlFor="rating" className="block text-sm font-medium text-foreground mb-1">Rating</label>
+                <label htmlFor="rating" className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
                 <StarRatings
                     rating={selectedRating}
                     starRatedColor="gold"
@@ -121,7 +121,7 @@ function ReviewForm({ productId }: { productId: string }) {
                 )}
             </div>
             <div>
-                <label htmlFor="comment" className="block text-sm font-medium text-foreground mb-1">Review (optional)</label>
+                <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">Review (optional)</label>
                 <Textarea 
                     id="comment" 
                     name="comment" 
@@ -151,7 +151,7 @@ function ReviewsList({ reviews }: { reviews: ProductClientProps['reviews'] }) {
 
   return (
     <div className="mt-8 space-y-8">
-      <h3 className="text-lg font-medium">Customer Reviews</h3>
+      <h3 className="text-lg font-medium text-gray-900">Customer Reviews</h3>
       <div className="space-y-6">
         {reviews.map((review) => (
           <div key={review.id} className="border-b pb-6">
@@ -171,7 +171,7 @@ function ReviewsList({ reviews }: { reviews: ProductClientProps['reviews'] }) {
               </div>
               <div className="ml-4 flex-1">
                 <div className="flex items-center">
-                  <h4 className="font-medium">{review.user.firstName} {review.user.lastName}</h4>
+                  <h4 className="font-medium text-gray-900">{review.user.firstName} {review.user.lastName}</h4>
                   <span className="mx-2 text-muted-foreground">•</span>
                   <StarRatings
                     rating={Number(review.rating) || 0}
@@ -183,7 +183,7 @@ function ReviewsList({ reviews }: { reviews: ProductClientProps['reviews'] }) {
                   />
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">{new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                {review.comment && <p className="mt-2 text-foreground">{review.comment}</p>}
+                {review.comment && <p className="mt-2 text-gray-700">{review.comment}</p>}
               </div>
             </div>
           </div>
@@ -468,8 +468,8 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
       <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg border border-gray-100">
         <Button
           onClick={() => setShowReviewForm(!showReviewForm)}
-          variant="outline"
-          className="w-full py-3 border-gray-200 hover:bg-gray-50 text-gray-700"
+          variant="default"
+          className="w-full py-3"
         >
           {showReviewForm ? 'Cancel Review' : 'Write a Review'}
         </Button>
