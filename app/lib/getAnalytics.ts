@@ -40,6 +40,7 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date) {
   }));
 
   const totalUsers = await prisma.user.count();
+  const totalProducts = await prisma.product.count();
   const totalProductViews = await prisma.productView.count({
     where: {
       viewedAt: {
@@ -229,6 +230,7 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date) {
   return {
     totalRevenue,
     totalOrders,
+    totalProducts,
     revenueData,
     userActivity,
     topProducts,

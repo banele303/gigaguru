@@ -1,10 +1,10 @@
-import { getAnalytics } from "@/app/lib/getAnalytics";
+import { getAnalyticsData } from "@/app/lib/getAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, ShoppingBag, Users } from "lucide-react";
+import { DollarSign, ShoppingBag, Users, Package } from "lucide-react";
 import { SalesCard } from "./SalesCard";
 
 export async function AnalyticsDashboard() {
-  const { totalRevenue, totalOrders, totalProducts } = await getAnalytics();
+    const { totalRevenue, totalOrders, totalProducts } = await getAnalyticsData();
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -20,8 +20,8 @@ export async function AnalyticsDashboard() {
       />
       <SalesCard
         title="Total Products"
-        amount={`${totalProducts}`}
-        icon={<Users className="h-4 w-4 text-muted-foreground" />}
+        amount={`+${totalProducts}`}
+        icon={<Package className="h-4 w-4 text-muted-foreground" />}
       />
     </div>
   );
