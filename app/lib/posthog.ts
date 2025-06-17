@@ -83,6 +83,20 @@ export interface AnalyticsData {
   operatingSystems: Array<{ name: string; count: number }>;
   userRetention: Array<{ cohort: string; percentage: number }>;
   conversionFunnel: Array<{ step: string; users: number; dropoff: number; }>;
+  revenueMetrics: {
+    totalRevenue: number;
+    averageOrderValue: number;
+    revenueByProduct: Array<{ productId: string; revenue: number; }>;
+  };
+  userBehavior: {
+    averageSessionDuration: number;
+    pagesPerSession: number;
+    exitPages: Array<{ page: string; exits: number; }>;
+  };
+  searchAnalytics: Array<{ query: string; count: number; }>;
+  revenueGrowth: number;
+  activeUsers: number;
+  userGrowth: number;
 }
 
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
