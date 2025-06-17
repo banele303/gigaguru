@@ -4,7 +4,7 @@ import { DollarSign, ShoppingBag, Users } from "lucide-react";
 import { SalesCard } from "./SalesCard";
 
 export async function AnalyticsDashboard() {
-  const { totalRevenue, totalSales, totalProducts } = await getAnalytics();
+  const { totalRevenue, totalOrders, totalProducts } = await getAnalytics();
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -15,7 +15,7 @@ export async function AnalyticsDashboard() {
       />
       <SalesCard
         title="Total Sales"
-        amount={`+${totalSales}`}
+        amount={`+${totalOrders}`}
         icon={<ShoppingBag className="h-4 w-4 text-muted-foreground" />}
       />
       <SalesCard
