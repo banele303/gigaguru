@@ -160,10 +160,22 @@ export const trackUserLogin = (userId: string, method: string) => {
 
 // Helper function to format currency
 export const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
+  const sign = amount < 0 ? "-" : "";
+  const absAmount = Math.abs(amount);
+
+  if (absAmount >= 1_000_000) {
+    return `${sign}R ${(absAmount / 1_000_000).toFixed(2)}M`;
+  }
+  if (absAmount >= 1_000) {
+    return `${sign}R ${(absAmount / 1_000).toFixed(1)}K`;
+  }
+
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'ZAR',
   }).format(amount);
+
+  return formatted.replace('ZAR', 'R ');
 };
 
 // Helper function to format percentage

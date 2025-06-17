@@ -51,7 +51,7 @@ export default function ProductCreateRoute() {
   const [isSale, setIsSale] = useState<boolean>(false);
   const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(undefined);
   const [discountPrice, setDiscountPrice] = useState<number | undefined>(undefined);
-  const [isUploadReady, setIsUploadReady] = useState(false);
+
 
   const handleAddSize = () => {
     if (sizeInput && !selectedSizes.includes(sizeInput)) {
@@ -397,50 +397,40 @@ export default function ProductCreateRoute() {
             {/* Image Upload Section */}
             <div className="flex flex-col gap-3">
               <Label>Product Images</Label>
-              {isUploadReady && (
-                <UploadDropzone
-                  onClientUploadComplete={(res) => {
-                    setImages(res.map((file) => file.url));
-                    toast.success("Images uploaded successfully");
-                  }}
-                  onUploadError={(error) => {
-                    toast.error("Failed to upload images");
-                    console.error("Upload error:", error);
-                  }}
-                  endpoint="imageUploader"
-                  config={{
-                    mode: "auto"
-                  }}
-                />
+              <UploadDropzone
+                endpoint="imageUploader"
+                onClientUploadComplete={(res) => {
+                  setImages([...images, ...res.map((r) => r.url)]);
+                  toast.success("Images uploaded successfully!");
+                }}
+                onUploadError={(error: Error) => {
+                  toast.error("Something went wrong during upload");
+                  console.error(error);
+                }}
+              />
+              {images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
+                  {images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <Image
+                        src={image}
+                        alt={`Product image ${index + 1}`}
+                        width={200}
+                        height={200}
+                        className="rounded-lg object-cover w-full h-[200px]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
-              <p className="text-sm text-muted-foreground">
-                Upload up to 10 images. Maximum file size: 10MB. Supported formats: JPG, PNG, WebP
-              </p>
             </div>
-
-            {/* Image Preview Grid */}
-            {images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
-                {images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <Image
-                      src={image}
-                      alt={`Product image ${index + 1}`}
-                      width={200}
-                      height={200}
-                      className="rounded-lg object-cover w-full h-[200px]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(index)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </CardContent>
         <CardFooter className="border-t bg-muted/50 p-6">
