@@ -80,6 +80,9 @@ export interface AnalyticsData {
     users: number;
     dropoff: number;
   }>;
+  operatingSystems: Array<{ name: string; count: number }>;
+  userRetention: Array<{ cohort: string; percentage: number }>;
+  conversionFunnel: Array<{ step: string; users: number; dropoff: number; }>;
 }
 
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
