@@ -11,19 +11,22 @@ import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 function SuccessContent() {
   const { user } = useKindeBrowserClient();
   const [loading, setLoading] = useState(true);
+  const [processed, setProcessed] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !processed) {
+      setProcessed(true);
       clearCart(user.id)
-        .then(() => {
-          setLoading(false);
-        })
         .catch((err) => {
           console.error("Failed to clear cart", err);
+        })
+        .finally(() => {
           setLoading(false);
         });
+    } else if (processed) {
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, processed]);
 
   if (loading) {
     return (

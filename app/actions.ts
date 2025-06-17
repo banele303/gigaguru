@@ -908,12 +908,40 @@ export async function checkOut() {
 
 export async function clearCart(userId: string) {
   try {
+    const cart: Cart | null = await redis.get(`cart-${userId}`);
+
+    if (cart && cart.items.length > 0) {
+      const totalAmount = cart.items.reduce((acc, item) => {
+        const itemPrice = item.discountPrice ?? item.price;
+        return acc + itemPrice * item.quantity;
+      }, 0);
+
+      await prisma.order.create({
+        data: {
+          userId: userId,
+          amount: totalAmount * 100,
+          status: "pending",
+          items: {
+            create: cart.items.map((item) => ({
+              quantity: item.quantity,
+              productId: item.id,
+              price: (item.discountPrice ?? item.price) * 100,
+            })),
+          },
+        },
+      });
+
+      revalidatePath("/dashboard");
+      revalidatePath("/dashboard/orders");
+    }
+
     await redis.del(`cart-${userId}`);
     revalidateTag("cart");
+
     return { success: true };
   } catch (error) {
-    console.error("Error clearing cart:", error);
-    return { success: false, error: "Failed to clear cart." };
+    console.error("Error in clearCart:", error);
+    return { success: false, error: "Failed to process payment." };
   }
 }
 

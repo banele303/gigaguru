@@ -25,6 +25,11 @@ async function getData() {
         order: {
           include: {
             user: true,
+            items: {
+              include: {
+                product: true,
+              },
+            },
           },
         },
       },

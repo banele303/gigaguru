@@ -6,7 +6,7 @@ import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "./api/uploadthing/core";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "sonner";
-import { PostHogProvider } from "@/components/providers/PostHogProvider";
+// import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { CartProvider } from './context/CartContext';
 
 const inter = Inter({ subsets: ["latin"] });
@@ -39,12 +39,16 @@ export default function RootLayout({
           <NextSSRPlugin
             routerConfig={extractRouterConfig(ourFileRouter)}
           />
-          <PostHogProvider>
+          {/* <PostHogProvider>
             <CartProvider>
               {children}
               <Toaster position="top-center" richColors closeButton />
             </CartProvider>
-          </PostHogProvider>
+          </PostHogProvider> */}
+          <CartProvider>
+            {children}
+            <Toaster position="top-center" richColors closeButton />
+          </CartProvider>
         </ThemeProvider>
       </body>
     </html>
