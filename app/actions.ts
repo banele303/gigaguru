@@ -168,17 +168,19 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         description: submission.value.description,
         status: submission.value.status,
         price: submission.value.price,
-        images: images,
+        images: submission.value.images,
         category: submission.value.category,
         isFeatured: submission.value.isFeatured ?? false,
         sku: submission.value.sku,
         quantity: submission.value.quantity || 0,
-        sizes: sizes,
-        colors: colors,
+        sizes: submission.value.sizes,
+        colors: submission.value.colors,
         brand: submission.value.brand || null,
         material: submission.value.material || null,
         userId: user.id,
-        isSale: isSale,
+        isSale: submission.value.isSale,
+        discountPrice: submission.value.discountPrice,
+        saleEndDate: submission.value.saleEndDate,
       },
     });
     
@@ -542,7 +544,7 @@ export async function deleteBanner(formData: FormData) {
 
     revalidateTag("banners");
 
-    return redirect("/dashboard/banners");
+    return redirect("/dashboard/banner");
   } catch (error) {
     console.error("Error deleting banner:", error);
     throw new Error("Failed to delete banner");
@@ -931,12 +933,10 @@ export async function clearCart(userId: string) {
         },
       });
 
-      revalidatePath("/dashboard");
-      revalidatePath("/dashboard/orders");
+      await redis.del(`cart-${userId}`);
+      revalidateTag("cart");
+      revalidatePath("/dashboard/banner");
     }
-
-    await redis.del(`cart-${userId}`);
-    revalidateTag("cart");
 
     return { success: true };
   } catch (error) {

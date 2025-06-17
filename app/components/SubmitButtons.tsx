@@ -39,6 +39,22 @@ export function SubmitButton({ text, variant }: buttonProps) {
   );
 }
 
+export function CreationSubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} size="lg">
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <span>Creating...</span>
+        </>
+      ) : (
+        "Create"
+      )}
+    </Button>
+  );
+}
+
 export function ShoppingBagButton() {
   const { pending } = useFormStatus();
 

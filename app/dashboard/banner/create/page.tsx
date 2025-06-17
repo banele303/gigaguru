@@ -1,7 +1,7 @@
 "use client";
 
 import { createBanner } from "@/app/actions";
-import { SubmitButton } from "@/app/components/SubmitButtons";
+import { CreationSubmitButton } from "@/app/components/SubmitButtons";
 import { UploadDropzone } from "@/app/lib/uplaodthing";
 import { bannerSchema } from "@/app/lib/zodSchemas";
 import { Button } from "@/components/ui/button";
@@ -156,9 +156,7 @@ export default function BannerRoute() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Creating..." : "Create Banner"}
-          </Button>
+          <CreationSubmitButton />
         </CardFooter>
       </Card>
     </form>

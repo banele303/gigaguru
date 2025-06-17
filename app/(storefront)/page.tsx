@@ -21,29 +21,37 @@ async function getBannerData(): Promise<BannerData[]> {
   return data;
 }
 
-async function getFeaturedProducts(): Promise<Product[]> {
+async function getFeaturedProducts({ page = 1 }: { page?: number }): Promise<{ products: Product[], totalPages: number }> {
   noStore();
-  let featuredProducts = await prisma.product.findMany({
-    where: {
-      isFeatured: true,
-      status: "published",
-    },
-    take: 3,
-  });
+  const pageSize = 8;
+  const skip = (page - 1) * pageSize;
 
-  if (featuredProducts.length === 0) {
-    featuredProducts = await prisma.product.findMany({
-      where: {
-        status: "published",
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 3,
-    });
+  let whereClause: any = {
+    isFeatured: true,
+    status: "published",
+  };
+
+  let totalProducts = await prisma.product.count({ where: whereClause });
+
+  if (totalProducts === 0) {
+    whereClause = {
+      status: "published",
+    };
+    totalProducts = await prisma.product.count({ where: whereClause });
   }
 
-  return featuredProducts;
+  const products = await prisma.product.findMany({
+    where: whereClause,
+    orderBy: {
+      createdAt: "desc",
+    },
+    skip: skip,
+    take: pageSize,
+  });
+
+  const totalPages = Math.ceil(totalProducts / pageSize);
+
+  return { products, totalPages };
 }
 
 function LoadingState() {
@@ -56,10 +64,12 @@ function LoadingState() {
   );
 }
 
-export default async function IndexPage() {
-  const [banners, products] = await Promise.all([
+export default async function IndexPage({ searchParams }: { searchParams?: { page?: string } }) {
+  const currentPage = Number(searchParams?.page) || 1;
+
+  const [banners, { products, totalPages }] = await Promise.all([
     getBannerData(),
-    getFeaturedProducts(),
+    getFeaturedProducts({ page: currentPage }),
   ]);
 
   return (
@@ -67,7 +77,7 @@ export default async function IndexPage() {
       <div>
         <Hero data={banners} />
         <HomeCategories />
-        <FeaturedProducts products={products} />
+        <FeaturedProducts products={products} totalPages={totalPages} currentPage={currentPage} />
       </div>
     </Suspense>
   );

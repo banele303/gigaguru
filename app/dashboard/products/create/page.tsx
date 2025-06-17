@@ -33,7 +33,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { categories } from "@/app/lib/categories";
-import { SubmitButton } from "@/app/components/SubmitButtons";
+import { CreationSubmitButton } from "@/app/components/SubmitButtons";
 import { Tag, Ruler, Palette } from "lucide-react";
 import { logFormSubmission } from "@/app/lib/debug";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
@@ -490,7 +490,7 @@ export default function ProductCreateRoute() {
           </div>
         </CardContent>
         <CardFooter className="border-t bg-muted/50 p-6">
-          <SubmitButton text="Create Product" />
+          <CreationSubmitButton />
         </CardFooter>
       </Card>
     </form>

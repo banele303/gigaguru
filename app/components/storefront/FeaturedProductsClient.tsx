@@ -2,9 +2,15 @@
 
 import { ProductCard } from "./ProductCard";
 import { Product } from "@/app/lib/zodSchemas";
+import { Pagination } from "./Pagination";
 
-// Client component that receives data via props
-export function FeaturedProductsClient({ products }: { products: Product[] }) {
+interface FeaturedProductsClientProps {
+  products: Product[];
+  totalPages: number;
+  currentPage: number;
+}
+
+export function FeaturedProductsClient({ products, totalPages, currentPage }: FeaturedProductsClientProps) {
   return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
@@ -18,10 +24,13 @@ export function FeaturedProductsClient({ products }: { products: Product[] }) {
         </div>
         <div className="mt-10">
           {products.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((item) => (
-                <ProductCard key={item.id} item={item} />
-              ))}
+            <div>
+              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
+                {products.map((item) => (
+                  <ProductCard key={item.id} item={item} />
+                ))}
+              </div>
+              <Pagination totalPages={totalPages} currentPage={currentPage} />
             </div>
           ) : (
             <div className="text-center py-10">
