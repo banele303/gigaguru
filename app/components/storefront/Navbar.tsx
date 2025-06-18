@@ -58,8 +58,8 @@ export function Navbar() {
             <Image
               src="/lgg.png"
               alt="SF Shoes Logo"
-              width={200}
-              height={200}
+              width={100}
+              height={100}
               className="object-contain"
             />
           </Link>

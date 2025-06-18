@@ -118,13 +118,13 @@ export function DashboardSidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-background overflow-y-auto">
-      <div className="flex h-24 items-center border-b px-4 sticky top-0 bg-green-500  z-10">
+      <div className="flex h-24 items-center border-b px-4 sticky top-0 bg-background z-10">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
-            src="/shoes/logo.png"
-            alt="ShoeBlessed Logo"
-            width={180}
-            height={180}
+            src="/lgg.png"
+            alt="SF Shoes Logo"
+            width={100}
+            height={100}
             className="object-contain"
           />
         </Link>
