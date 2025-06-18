@@ -45,9 +45,9 @@ export function Hero({ data }: { data: BannerData[] }) {
                   </div>
 
                   {/* Bottom Section - Main Content */}
-                  <div className="space-y-6">
+                  <div className="space-y-6 pl-[2rem]">
                     <div className="space-y-4">
-                      <h1 className="text-2xl md:text-4xl lg:text-4xl font-bold text-white leading-tight tracking-tight">
+                      <h1 className="text-2xl md:text-5xl lg:text-5xl font-bold text-white leading-tight tracking-tight">
                         {item.title}
                       </h1>
                       <p className="text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">

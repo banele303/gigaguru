@@ -7,21 +7,21 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatPrice(price: number, currency: string = "R") {
   return `${currency} ${new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(price)}`;
 }
 
 export function formatPriceWithDiscount(originalPrice: number, discountPrice: number | null | undefined, currency: string = "R") {
   if (discountPrice !== null && discountPrice !== undefined && discountPrice < originalPrice) {
     return `${currency} ${new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(discountPrice)}`;
   } else {
     return `${currency} ${new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(originalPrice)}`;
   }
 }
