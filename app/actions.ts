@@ -75,77 +75,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   }
 
   try {
-    // Parse arrays from form data
-    let images: string[] = [];
-    let sizes: string[] = [];
-    let colors: string[] = [];
-
-    try {
-      const imagesStr = formData.get("images") as string;
-      images = JSON.parse(imagesStr);
-      // If the result is a string, it might be double-stringified
-      if (typeof images === 'string') {
-        images = JSON.parse(images);
-      }
-    } catch (e) {
-      console.error("Error parsing images:", e);
-      return {
-        status: 'error' as const,
-        message: 'Failed to parse images. Please try again.',
-      };
-    }
-
-    try {
-      const sizesStr = formData.get("sizes") as string;
-      sizes = JSON.parse(sizesStr);
-    } catch (e) {
-      console.error("Error parsing sizes:", e);
-      sizes = [];
-    }
-
-    try {
-      const colorsStr = formData.get("colors") as string;
-      colors = JSON.parse(colorsStr);
-    } catch (e) {
-      console.error("Error parsing colors:", e);
-      colors = [];
-    }
-
-    const isSale = formData.get("isSale") === "true";
-    const saleEndDateString = formData.get("saleEndDate") as string | null;
-    const saleEndDate = saleEndDateString ? new Date(saleEndDateString) : null;
-    const discountPrice = formData.get("discountPrice") ? Number(formData.get("discountPrice")) : null;
-
-    // Create a new FormData with parsed values
-    const parsedFormData = new FormData();
-    for (const [key, value] of formData.entries()) {
-      if (key === "images") {
-        parsedFormData.append(key, JSON.stringify(images));
-      } else if (key === "sizes") {
-        parsedFormData.append(key, JSON.stringify(sizes));
-      } else if (key === "colors") {
-        parsedFormData.append(key, JSON.stringify(colors));
-      } else if (key === "isSale") {
-        parsedFormData.append(key, String(isSale));
-      } else if (key === "saleEndDate") {
-        parsedFormData.append(key, String(saleEndDate));
-      } else if (key === "discountPrice") {
-        parsedFormData.append(key, String(discountPrice));
-      } else {
-        parsedFormData.append(key, value as string);
-      }
-    }
-
-    console.log("Parsed form data:", {
-      images,
-      sizes,
-      colors,
-      isSale,
-      saleEndDate,
-      discountPrice
-    });
-
-    const submission = parseWithZod(parsedFormData, {
+    const submission = parseWithZod(formData, {
       schema: createProductSchema,
     });
 
@@ -178,8 +108,8 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         brand: submission.value.brand || null,
         material: submission.value.material || null,
         userId: user.id,
-        isSale: submission.value.isSale,
-        discountPrice: submission.value.discountPrice,
+        isSale: submission.value.isSale ?? false,
+        discountPrice: submission.value.discountPrice ?? null,
         saleEndDate: submission.value.saleEndDate,
       },
     });

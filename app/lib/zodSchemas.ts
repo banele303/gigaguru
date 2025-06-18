@@ -6,17 +6,9 @@ export const productSchema = z.object({
   description: z.string().min(1, "Description is required"),
   status: z.enum(["draft", "published", "archived"]),
   price: z.coerce.number().min(1, "Price must be greater than 0"),
-  discountPrice: z.union([
-    z.number().min(0, "Discount price cannot be negative"),
-    z.string().transform((val) => val === "" ? null : Number(val)),
-    z.null()
-  ]).optional(),
+  discountPrice: z.coerce.number().optional().nullable(),
   isSale: z.coerce.boolean().optional().default(false),
-  saleEndDate: z.union([
-    z.date(),
-    z.string().transform((val) => val === "" ? null : new Date(val)),
-    z.null()
-  ]).optional(),
+  saleEndDate: z.coerce.date().optional().nullable(),
   sku: z.string().min(1, "SKU is required"),
   images: z.array(z.string()).min(1, "At least one image is required"),
   category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),
@@ -36,17 +28,9 @@ export const createProductSchema = z.object({
   description: z.string().min(1, "Description is required"),
   status: z.enum(["draft", "published", "archived"]),
   price: z.coerce.number().min(1, "Price must be greater than 0"),
-  discountPrice: z.union([
-    z.number().min(0, "Discount price cannot be negative"),
-    z.string().transform((val) => val === "" ? null : Number(val)),
-    z.null()
-  ]).optional(),
+  discountPrice: z.coerce.number().optional().nullable(),
   isSale: z.coerce.boolean().optional().default(false),
-  saleEndDate: z.union([
-    z.date(),
-    z.string().transform((val) => val === "" ? null : new Date(val)),
-    z.null()
-  ]).optional(),
+  saleEndDate: z.coerce.date().optional().nullable(),
   sku: z.string().min(1, "SKU is required"),
   images: z.array(z.string()).min(1, "At least one image is required"),
   category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),
@@ -63,17 +47,9 @@ export const updateProductSchema = z.object({
   description: z.string().min(1, "Description is required"),
   status: z.enum(["draft", "published", "archived"]),
   price: z.coerce.number().min(1, "Price must be greater than 0"),
-  discountPrice: z.union([
-    z.number().min(0, "Discount price cannot be negative"),
-    z.string().transform((val) => val === "" ? null : Number(val)),
-    z.null()
-  ]).optional(),
+  discountPrice: z.coerce.number().optional().nullable(),
   isSale: z.coerce.boolean().optional().default(false),
-  saleEndDate: z.union([
-    z.date(),
-    z.string().transform((val) => val === "" ? null : new Date(val)),
-    z.null()
-  ]).optional(),
+  saleEndDate: z.coerce.date().optional().nullable(),
   sku: z.string().min(1, "SKU is required"),
   images: z.array(z.string()).min(1, "At least one image is required"),
   category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),

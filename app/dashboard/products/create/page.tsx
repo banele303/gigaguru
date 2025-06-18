@@ -102,16 +102,21 @@ export default function ProductCreateRoute() {
 
   return (
     <form
-      action={async (formData) => {
-        formData.set("images", JSON.stringify(images));
-        formData.set("sizes", JSON.stringify(selectedSizes));
-        formData.set("colors", JSON.stringify(selectedColors));
-        await action(formData);
-      }}
-      className="max-w-7xl mx-auto"
       id={form.id}
       onSubmit={form.onSubmit}
+      action={action}
+      className="max-w-7xl mx-auto"
+      noValidate
     >
+      {images.map((image, index) => (
+        <input type="hidden" name={`images[${index}]`} key={`image-${index}`} defaultValue={image} />
+      ))}
+      {selectedSizes.map((size, index) => (
+        <input type="hidden" name={`sizes[${index}]`} key={`size-${index}`} defaultValue={size} />
+      ))}
+      {selectedColors.map((color, index) => (
+        <input type="hidden" name={`colors[${index}]`} key={`color-${index}`} defaultValue={color} />
+      ))}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" size="icon" asChild className="rounded-full shadow-sm hover:shadow-md transition-shadow">
           <Link href="/dashboard/products">
@@ -224,10 +229,10 @@ export default function ProductCreateRoute() {
                 </div>
                 <Switch
                   id="isSale"
-                  name={fields.isSale.name}
                   checked={isSale}
                   onCheckedChange={setIsSale}
                 />
+                <input type="hidden" name={fields.isSale.name} value={String(isSale)} />
                 <p className="text-red-500">{fields.isSale.errors}</p>
               </div>
 
