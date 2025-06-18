@@ -69,10 +69,10 @@ export function SearchBar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            className="w-full rounded-full px-12 py-3 text-base bg-white"
+            className="w-full rounded-full px-12 py-3 text-base bg-white text-gray-900 placeholder:text-gray-500"
           />
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <SearchIcon className="h-5 w-5 text-gray-400" />
+            <SearchIcon className="h-5 w-5 text-gray-500" />
           </div>
         </div>
       </form>
@@ -93,7 +93,7 @@ export function SearchBar() {
                     height={40}
                     className="object-cover rounded-md"
                   />
-                  <span className="ml-4">{product.name}</span>
+                  <span className="ml-4 text-gray-900 font-medium">{product.name}</span>
                 </Link>
               </li>
             ))}
