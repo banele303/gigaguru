@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -19,22 +20,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 function FilterControls({
   setFilter,
   closeSheet,
+  initialFilters,
 }: {
   setFilter: (filter: any) => void;
   closeSheet: () => void;
+  initialFilters?: Record<string, string>;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [filters, setFilters] = useState({
-    category: "",
-    brand: "",
+    category: initialFilters?.category || "",
+    brand: initialFilters?.brand || "",
     material: "",
     size: "",
     color: "",
-    minPrice: "",
-    maxPrice: "",
+    minPrice: initialFilters?.minPrice || "",
+    maxPrice: initialFilters?.maxPrice || "",
   });
+
+  // Update filters when initialFilters change
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      category: initialFilters?.category || "",
+      brand: initialFilters?.brand || "",
+      minPrice: initialFilters?.minPrice || "",
+      maxPrice: initialFilters?.maxPrice || "",
+    }));
+  }, [initialFilters]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -48,6 +67,22 @@ function FilterControls({
   };
 
   const handleFilter = () => {
+    // Create new URLSearchParams with current search params
+    const params = new URLSearchParams(searchParams.toString());
+
+    // Update params with current filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+
+    // Update URL
+    router.push(`${pathname}?${params.toString()}`);
+
+    // Update parent component
     setFilter(filters);
     closeSheet();
   };
@@ -191,12 +226,25 @@ export function FilterSidebar({
   setFilter: (filter: any) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Get initial filters from URL
+  const initialFilters = {
+    category: searchParams.get('category') || '',
+    brand: searchParams.get('brand') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+  };
 
   return (
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:block w-80 p-4 border-r">
-        <FilterControls setFilter={setFilter} closeSheet={() => {}} />
+        <FilterControls
+          setFilter={setFilter}
+          closeSheet={() => {}}
+          initialFilters={initialFilters}
+        />
       </div>
 
       {/* Mobile Sheet */}
@@ -218,6 +266,7 @@ export function FilterSidebar({
               <FilterControls
                 setFilter={setFilter}
                 closeSheet={() => setOpen(false)}
+                initialFilters={initialFilters}
               />
             </div>
           </SheetContent>

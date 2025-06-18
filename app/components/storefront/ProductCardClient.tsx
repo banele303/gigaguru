@@ -66,7 +66,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
           <CarouselContent>
             {item.images.map((img, index) => (
               <CarouselItem key={index}>
-                <div className="relative h-[280px]">
+                <div className="relative aspect-square w-full">
                   <Image
                     src={img}
                     alt={item.name}

@@ -40,7 +40,18 @@ function ProductsPageContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState({});
+  const [filter, setFilter] = useState<Record<string, string>>(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    const initialFilter: Record<string, string> = {};
+    
+    // Only include valid filter parameters
+    if (params.has('category')) initialFilter.category = params.get('category')!;
+    if (params.has('brand')) initialFilter.brand = params.get('brand')!;
+    if (params.has('minPrice')) initialFilter.minPrice = params.get('minPrice')!;
+    if (params.has('maxPrice')) initialFilter.maxPrice = params.get('maxPrice')!;
+    
+    return initialFilter;
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -48,7 +59,7 @@ function ProductsPageContent() {
       const query = new URLSearchParams(filter).toString();
       const res = await fetch(`/api/products?${query}`);
       const data = await res.json();
-      setProducts(data);
+      setProducts(data.products || []);
       setLoading(false);
     };
 
