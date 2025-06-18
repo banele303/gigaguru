@@ -41,28 +41,13 @@ export function Hero({ data }: { data: BannerData[] }) {
                     >
                       Featured
                     </Badge>
-                    <div className="flex gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border-white/30"
-                      >
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border-white/30"
-                      >
-                        <Share2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    
                   </div>
 
                   {/* Bottom Section - Main Content */}
                   <div className="space-y-6">
                     <div className="space-y-4">
-                      <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold text-white leading-tight tracking-tight">
+                      <h1 className="text-2xl md:text-4xl lg:text-4xl font-bold text-white leading-tight tracking-tight">
                         {item.title}
                       </h1>
                       <p className="text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed">

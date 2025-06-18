@@ -14,6 +14,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "ShoeBlessed",
   description: "Your one-stop shop for all your shoe needs",
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
 };
 
 export const dynamic = 'force-dynamic';
