@@ -21,53 +21,10 @@ type FlashSaleResult = {
 };
 
 export async function createProduct(prevState: unknown, formData: FormData) {
-  console.log("createProduct action started");
-  console.log("Form data received:", Object.fromEntries(formData.entries()));
-  
   const { getUser } = getKindeServerSession();
   const user = await getUser();
 
-  console.log("User:", user);
-
-  if (!user) {
-    console.log("No user found");
-    return {
-      status: 'error' as const,
-      message: 'Please sign in to create products.',
-    };
-  }
-
-  // Check if user exists in the database
-  const dbUser = await prisma.user.findUnique({
-    where: {
-      id: user.id
-    }
-  });
-
-  if (!dbUser) {
-    console.log("User not found in database");
-    // Create the user if they don't exist
-    try {
-      await prisma.user.create({
-        data: {
-          id: user.id,
-          email: user.email || '',
-          firstName: user.given_name || '',
-          lastName: user.family_name || '',
-          profileImage: user.picture || '',
-        }
-      });
-    } catch (error) {
-      console.error("Error creating user:", error);
-      return {
-        status: 'error' as const,
-        message: 'Failed to create user account. Please try again.',
-      };
-    }
-  }
-
-  if (user.email !== "alexsouthflow2@gmail.com") {
-    console.log("Authorization failed for create product");
+  if (!user || user.email !== "alexsouthflow2@gmail.com") {
     return {
       status: 'error' as const,
       message: 'You are not authorized to create products.',
@@ -75,11 +32,52 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   }
 
   try {
-    const submission = parseWithZod(formData, {
+    // Parse JSON strings from form data
+    const images = JSON.parse(formData.get("images") as string || "[]");
+    const sizes = JSON.parse(formData.get("sizes") as string || "[]");
+    const colors = JSON.parse(formData.get("colors") as string || "[]");
+    const isSale = formData.get("isSale") === "true";
+    
+    // Properly handle discountPrice conversion
+    let discountPrice = null;
+    const discountPriceStr = formData.get("discountPrice") as string;
+    if (discountPriceStr && !isNaN(Number(discountPriceStr))) {
+      discountPrice = Number(discountPriceStr);
+    }
+    
+    // Properly handle saleEndDate
+    let saleEndDate = null;
+    const saleEndDateStr = formData.get("saleEndDate") as string;
+    if (saleEndDateStr) {
+      const date = new Date(saleEndDateStr);
+      if (!isNaN(date.getTime())) {
+        saleEndDate = date;
+      }
+    }
+
+    // Create a new FormData with parsed values
+    const parsedFormData = new FormData();
+    for (const [key, value] of formData.entries()) {
+      if (key === "images") {
+        parsedFormData.append(key, JSON.stringify(images));
+      } else if (key === "sizes") {
+        parsedFormData.append(key, JSON.stringify(sizes));
+      } else if (key === "colors") {
+        parsedFormData.append(key, JSON.stringify(colors));
+      } else if (key === "isSale") {
+        parsedFormData.append(key, String(isSale));
+      } else if (key === "discountPrice") {
+        parsedFormData.append(key, String(discountPrice));
+      } else if (key === "saleEndDate") {
+        parsedFormData.append(key, saleEndDate ? saleEndDate.toISOString() : "");
+      } else {
+        parsedFormData.append(key, value as string);
+      }
+    }
+
+    const submission = parseWithZod(parsedFormData, {
       schema: createProductSchema,
     });
-
-    console.log("Validation result:", submission);
 
     if (submission.status !== "success") {
       console.log("Validation failed:", submission.error);
@@ -109,8 +107,8 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         material: submission.value.material || null,
         userId: user.id,
         isSale: submission.value.isSale ?? false,
-        discountPrice: submission.value.discountPrice ?? null,
-        saleEndDate: submission.value.saleEndDate,
+        discountPrice: submission.value.isSale ? submission.value.discountPrice : null,
+        saleEndDate: submission.value.isSale ? submission.value.saleEndDate : null,
       },
     });
     
@@ -123,33 +121,6 @@ export async function createProduct(prevState: unknown, formData: FormData) {
     };
   } catch (error) {
     console.error('Error creating product:', error);
-    
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      (error as any).code === 'P2002' &&
-      (error as any).meta?.target?.includes('sku')
-    ) {
-      return {
-        status: 'error' as const,
-        message: 'A product with this SKU already exists. Please use a unique SKU.',
-      };
-    }
-
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      (error as any).code === 'P2003' &&
-      (error as any).meta?.constraint === 'Product_userId_fkey'
-    ) {
-      return {
-        status: 'error' as const,
-        message: 'User not found. Please try logging in again.',
-      };
-    }
-    
     return {
       status: 'error' as const,
       message: 'Failed to create product. Please try again.',
