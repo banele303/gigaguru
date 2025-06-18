@@ -26,10 +26,7 @@ export async function GET(req: NextRequest) {
     };
 
     if (category) {
-      where.category = {
-        equals: category,
-        mode: 'insensitive' // Make category search case-insensitive
-      };
+      where.category = category.toLowerCase();
     }
 
     if (brand) {
@@ -93,17 +90,7 @@ export async function GET(req: NextRequest) {
     // Temporarily disable cache for debugging
     // await redis.set(cacheKey, products);
 
-    // Filter products in memory as a fallback
-    let filteredProducts = [...products];
-    
-    if (category) {
-      filteredProducts = filteredProducts.filter(p => 
-        p.category?.toLowerCase() === category.toLowerCase()
-      );
-      console.log(`Filtered to ${filteredProducts.length} products in category ${category}`);
-    }
-    
-    return NextResponse.json({ products: filteredProducts });
+    return NextResponse.json({ products });
   } catch (error) {
     console.error("Error fetching products:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
