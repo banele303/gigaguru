@@ -28,25 +28,9 @@ export const createProductSchema = z.object({
   description: z.string().min(1, "Description is required"),
   status: z.enum(["draft", "published", "archived"]),
   price: z.coerce.number().min(1, "Price must be greater than 0"),
-  discountPrice: z.coerce.number().optional().nullable()
-    .superRefine((val, ctx) => {
-      if (ctx.parent.isSale && (!val || val >= ctx.parent.price)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Discount price must be less than regular price",
-        });
-      }
-    }),
+  discountPrice: z.coerce.number().optional().nullable(),
   isSale: z.coerce.boolean().optional().default(false),
-  saleEndDate: z.coerce.date().optional().nullable()
-    .superRefine((val, ctx) => {
-      if (ctx.parent.isSale && (!val || val <= new Date())) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Sale end date must be in the future",
-        });
-      }
-    }),
+  saleEndDate: z.coerce.date().optional().nullable(),
   sku: z.string().min(1, "SKU is required"),
   images: z.array(z.string()).min(1, "At least one image is required"),
   category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),
@@ -56,7 +40,21 @@ export const createProductSchema = z.object({
   colors: z.array(z.string()).optional().default([]),
   brand: z.string().optional().nullable(),
   material: z.string().optional().nullable(),
-});
+}).refine(
+  (data) => {
+    if (data.isSale) {
+      if (!data.discountPrice) return false;
+      if (data.discountPrice >= data.price) return false;
+      if (!data.saleEndDate) return false;
+      if (data.saleEndDate <= new Date()) return false;
+    }
+    return true;
+  },
+  {
+    message: "When a product is on sale, it must have a valid discount price (less than regular price) and a future sale end date",
+    path: ["isSale"], // This will show the error on the isSale field
+  }
+);
 
 export const updateProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
