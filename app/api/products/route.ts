@@ -15,17 +15,21 @@ export async function GET(req: NextRequest) {
   const cacheKey = `products:${category || 'all'}:${brand || 'all'}:${material || 'all'}:${size || 'all'}:${color || 'all'}:${minPrice || '0'}:${maxPrice || 'all'}`;
 
   try {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(cached);
-    }
+    // Temporarily disable cache for debugging
+    // const cached = await redis.get(cacheKey);
+    // if (cached) {
+    //   return NextResponse.json(cached);
+    // }
 
     const where: any = {
       status: "published",
     };
 
     if (category) {
-      where.category = category;
+      where.category = {
+        equals: category,
+        mode: 'insensitive' // Make category search case-insensitive
+      };
     }
 
     if (brand) {
@@ -77,7 +81,8 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    await redis.set(cacheKey, products);
+    // Temporarily disable cache for debugging
+    // await redis.set(cacheKey, products);
 
     return NextResponse.json({ products });
   } catch (error) {

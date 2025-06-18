@@ -24,7 +24,7 @@ import {
 function FilterControls({
   setFilter,
   closeSheet,
-  initialFilters,
+  initialFilters = {},
 }: {
   setFilter: (filter: any) => void;
   closeSheet: () => void;
@@ -35,25 +35,27 @@ function FilterControls({
   const searchParams = useSearchParams();
 
   const [filters, setFilters] = useState({
-    category: initialFilters?.category || "",
-    brand: initialFilters?.brand || "",
-    material: "",
-    size: "",
-    color: "",
-    minPrice: initialFilters?.minPrice || "",
-    maxPrice: initialFilters?.maxPrice || "",
+    category: searchParams.get('category') || "",
+    brand: searchParams.get('brand') || "",
+    material: searchParams.get('material') || "",
+    size: searchParams.get('size') || "",
+    color: searchParams.get('color') || "",
+    minPrice: searchParams.get('minPrice') || "",
+    maxPrice: searchParams.get('maxPrice') || "",
   });
 
-  // Update filters when initialFilters change
+  // Update filters when URL params change
   useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      category: initialFilters?.category || "",
-      brand: initialFilters?.brand || "",
-      minPrice: initialFilters?.minPrice || "",
-      maxPrice: initialFilters?.maxPrice || "",
-    }));
-  }, [initialFilters]);
+    setFilters({
+      category: searchParams.get('category') || "",
+      brand: searchParams.get('brand') || "",
+      material: searchParams.get('material') || "",
+      size: searchParams.get('size') || "",
+      color: searchParams.get('color') || "",
+      minPrice: searchParams.get('minPrice') || "",
+      maxPrice: searchParams.get('maxPrice') || "",
+    });
+  }, [searchParams]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -66,24 +68,37 @@ function FilterControls({
     setFilters((prev) => ({ ...prev, [name]: value === "all" ? "" : value }));
   };
 
-  const handleFilter = () => {
-    // Create new URLSearchParams with current search params
-    const params = new URLSearchParams(searchParams.toString());
-
-    // Update params with current filters
-    Object.entries(filters).forEach(([key, value]) => {
+  const updateUrlParams = (newFilters: typeof filters) => {
+    const params = new URLSearchParams();
+    
+    Object.entries(newFilters).forEach(([key, value]) => {
       if (value) {
         params.set(key, value);
-      } else {
-        params.delete(key);
       }
     });
-
-    // Update URL
+    
     router.push(`${pathname}?${params.toString()}`);
+  };
 
-    // Update parent component
+  const handleFilter = () => {
+    updateUrlParams(filters);
     setFilter(filters);
+    closeSheet();
+  };
+
+  const clearFilters = () => {
+    const clearedFilters = {
+      category: "",
+      brand: "",
+      material: "",
+      size: "",
+      color: "",
+      minPrice: "",
+      maxPrice: "",
+    };
+    setFilters(clearedFilters);
+    router.push(pathname);
+    setFilter(clearedFilters);
     closeSheet();
   };
 
@@ -210,12 +225,22 @@ function FilterControls({
           </div>
         </div>
       </div>
-      <Button
-        onClick={handleFilter}
-        className="w-full py-3 text-lg font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Apply Filters
-      </Button>
+      <div className="flex gap-4">
+        <Button
+          onClick={handleFilter}
+          className="flex-1 py-3 text-lg font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Apply Filters
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={clearFilters}
+          className="py-3 text-lg font-semibold"
+        >
+          Clear
+        </Button>
+      </div>
     </div>
   );
 }

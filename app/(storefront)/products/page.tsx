@@ -40,27 +40,40 @@ function ProductsPageContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<Record<string, string>>(() => {
+  const [filter, setFilter] = useState<Record<string, string>>({});
+
+  // Update filter state when URL params change
+  useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
-    const initialFilter: Record<string, string> = {};
+    const newFilter: Record<string, string> = {};
     
-    // Only include valid filter parameters
-    if (params.has('category')) initialFilter.category = params.get('category')!;
-    if (params.has('brand')) initialFilter.brand = params.get('brand')!;
-    if (params.has('minPrice')) initialFilter.minPrice = params.get('minPrice')!;
-    if (params.has('maxPrice')) initialFilter.maxPrice = params.get('maxPrice')!;
+    // Include all valid filter parameters
+    if (params.has('category')) newFilter.category = params.get('category')!;
+    if (params.has('brand')) newFilter.brand = params.get('brand')!;
+    if (params.has('minPrice')) newFilter.minPrice = params.get('minPrice')!;
+    if (params.has('maxPrice')) newFilter.maxPrice = params.get('maxPrice')!;
+    if (params.has('material')) newFilter.material = params.get('material')!;
+    if (params.has('size')) newFilter.size = params.get('size')!;
+    if (params.has('color')) newFilter.color = params.get('color')!;
     
-    return initialFilter;
-  });
+    setFilter(newFilter);
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
-      const query = new URLSearchParams(filter).toString();
-      const res = await fetch(`/api/products?${query}`);
-      const data = await res.json();
-      setProducts(data.products || []);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const query = new URLSearchParams(filter).toString();
+        console.log('Fetching products with query:', query);
+        const res = await fetch(`/api/products?${query}`);
+        const data = await res.json();
+        console.log('Products data:', data);
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProducts();
