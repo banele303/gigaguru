@@ -29,20 +29,24 @@ export const createProductSchema = z.object({
   status: z.enum(["draft", "published", "archived"]),
   price: z.coerce.number().min(1, "Price must be greater than 0"),
   discountPrice: z.coerce.number().optional().nullable()
-    .refine((val, ctx) => {
+    .superRefine((val, ctx) => {
       if (ctx.parent.isSale && (!val || val >= ctx.parent.price)) {
-        return false;
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Discount price must be less than regular price",
+        });
       }
-      return true;
-    }, "Discount price must be less than regular price"),
+    }),
   isSale: z.coerce.boolean().optional().default(false),
   saleEndDate: z.coerce.date().optional().nullable()
-    .refine((val, ctx) => {
+    .superRefine((val, ctx) => {
       if (ctx.parent.isSale && (!val || val <= new Date())) {
-        return false;
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Sale end date must be in the future",
+        });
       }
-      return true;
-    }, "Sale end date must be in the future"),
+    }),
   sku: z.string().min(1, "SKU is required"),
   images: z.array(z.string()).min(1, "At least one image is required"),
   category: z.enum(["men", "women", "kids", "sports", "home", "beauty", "jewellery", "technology", "brands", "deals", "sale"]),
