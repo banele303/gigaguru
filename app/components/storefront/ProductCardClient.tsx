@@ -110,24 +110,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
                     </div>
                   )}
 
-                  {/* Quick View Button */}
-                  <div
-                    className={cn(
-                      "absolute top-2 right-2 transition-all duration-300",
-                      isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2",
-                    )}
-                  >
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="bg-white/90 backdrop-blur-md hover:bg-white text-gray-700 hover:text-gray-900 rounded-full shadow-lg border border-white/50 w-8 h-8"
-                      asChild
-                    >
-                      <Link href={`/product/${item.id}`}>
-                        <Eye className="w-3.5 h-3.5" />
-                      </Link>
-                    </Button>
-                  </div>
+                  
 
                   {/* Carousel Navigation */}
                   <div className="absolute inset-0 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
