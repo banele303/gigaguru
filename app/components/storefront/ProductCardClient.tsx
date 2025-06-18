@@ -66,12 +66,13 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
           <CarouselContent>
             {item.images.map((img, index) => (
               <CarouselItem key={index}>
-                <div className="relative aspect-square w-full">
+                <div className="relative h-[280px] w-full">
                   <Image
                     src={img}
                     alt={item.name}
                     fill
                     className="object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
+                    priority
                   />
                   {isCurrentlyOnSale && (
                     <>
