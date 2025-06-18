@@ -65,6 +65,8 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    console.log('Querying products with filter:', where);
+    
     const products = await prisma.product.findMany({
       where,
       select: {
@@ -75,16 +77,33 @@ export async function GET(req: NextRequest) {
         isSale: true,
         saleEndDate: true,
         images: true,
+        category: true,
+        brand: true,
+        material: true,
+        sizes: true,
+        colors: true,
       },
       orderBy: {
         createdAt: "desc",
       },
     });
+    
+    console.log('Found products:', products.length);
 
     // Temporarily disable cache for debugging
     // await redis.set(cacheKey, products);
 
-    return NextResponse.json({ products });
+    // Filter products in memory as a fallback
+    let filteredProducts = [...products];
+    
+    if (category) {
+      filteredProducts = filteredProducts.filter(p => 
+        p.category?.toLowerCase() === category.toLowerCase()
+      );
+      console.log(`Filtered to ${filteredProducts.length} products in category ${category}`);
+    }
+    
+    return NextResponse.json({ products: filteredProducts });
   } catch (error) {
     console.error("Error fetching products:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
