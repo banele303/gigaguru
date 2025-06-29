@@ -121,7 +121,7 @@ export function DashboardSidebar() {
       <div className="flex h-24 items-center border-b px-4 sticky top-0 bg-background z-10">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
-            src="/lgg.png"
+            src="/gigalogo.jpeg"
             alt="SF Shoes Logo"
             width={100}
             height={100}

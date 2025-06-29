@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import all from "@/public/all.jpeg";
-import men from "@/public/men.jpeg";
-import women from "@/public/women.jpeg";
+import all from "@/public/g1.jpeg";
+import men from "@/public/g2.jpeg";
+import women from "@/public/g3.jpeg";
 
 export function HomeCategories() {
   return (

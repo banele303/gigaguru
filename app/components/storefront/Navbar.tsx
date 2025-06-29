@@ -39,7 +39,7 @@ function AuthButtons() {
       >
         <LoginLink>Sign in</LoginLink>
       </Button>
-      <Button variant="ghost" asChild>
+      <Button variant="outline" asChild>
         <RegisterLink postLoginRedirectURL="/">Sign up</RegisterLink>
       </Button>
     </div>

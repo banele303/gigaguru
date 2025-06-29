@@ -6,7 +6,7 @@ const Navbar = () => {
     <div className="flex items-center justify-between p-4">
       <Link href="/" className="flex items-center gap-2">
         <Image
-          src="/lgg.png"
+          src="/gigalogo.jpeg"
           alt="SF Shoes Logo"
           width={40}
           height={40}
