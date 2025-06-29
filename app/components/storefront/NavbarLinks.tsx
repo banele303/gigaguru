@@ -31,25 +31,10 @@ export const navbarLinks = [
     href: "/products?category=sports",
   },
  
-  {
-    id: 7,
-    name: "Beauty",
-    href: "/products?category=beauty",
-  },
-  {
-    id: 8,
-    name: "Jewellery",
-    href: "/products?category=jewellery",
-  },
-  {
-    id: 9,
-    name: "Technology",
-    href: "/products?category=technology",
-  },
   
- 
+
   {
-    id: 12,
+    id: 6,
     name: "Sale",
     href: "/products?category=sale",
   },

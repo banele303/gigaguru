@@ -40,7 +40,8 @@ export function HomeCategories() {
           <Image
             src={men}
             alt="Products for men Image"
-            className="object-bottom object-cover sm:absolute sm:inset-0 sm:w-full sm:h-full"
+            fill
+            className="object-center object-cover"
           />
           <div className="bg-gradient-to-b from-transparent to-black opacity-55 sm:absolute sm:inset-0" />
           <div className="p-6 flex items-end sm:absolute sm:inset-0">
@@ -55,7 +56,8 @@ export function HomeCategories() {
           <Image
             src={women}
             alt="Women product image"
-            className="object-bottom object-cover sm:absolute sm:inset-0 sm:w-full sm:h-full"
+            fill
+            className="object-center object-cover"
           />
           <div className="bg-gradient-to-b from-transparent to-black opacity-55 sm:absolute sm:inset-0" />
           <div className="p-6 flex items-end sm:absolute sm:inset-0">

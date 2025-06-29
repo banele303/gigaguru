@@ -56,7 +56,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center">
             <Image
-              src="/lgg.png"
+              src="/gigalogo.jpeg"
               alt="SF Shoes Logo"
               width={100}
               height={100}
