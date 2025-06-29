@@ -32,6 +32,27 @@ export async function createProduct(prevState: unknown, formData: FormData) {
   }
 
   try {
+    // Check if user exists in database, create if not
+    const dbUser = await prisma.user.findUnique({
+      where: {
+        id: user.id
+      }
+    });
+
+    if (!dbUser) {
+      // Create the user if they don't exist
+      await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email || '',
+          firstName: user.given_name || '',
+          lastName: user.family_name || '',
+          profileImage: user.picture || '',
+          createdAt: new Date()
+        }
+      });
+    }
+
     // Parse JSON strings from form data
     const images = JSON.parse(formData.get("images") as string || "[]");
     const sizes = JSON.parse(formData.get("sizes") as string || "[]");
