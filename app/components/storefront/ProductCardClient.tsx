@@ -59,7 +59,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
 
   return (
     <div
-      className="group relative rounded-xl bg-gradient-to-br from-white to-gray-50/50 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100/50 backdrop-blur-sm max-w-sm mx-auto"
+      className="group relative rounded-xl bg-gradient-to-br from-white to-gray-50/50 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100/50 backdrop-blur-sm max-w-md mx-auto"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -125,7 +125,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
 
         {/* Favorite Button */}
         {item.id && (
-          <div className="absolute top-2 right-12">
+          <div className="absolute top-2 right-2">
             <FavoriteButton productId={item.id} />
           </div>
         )}
