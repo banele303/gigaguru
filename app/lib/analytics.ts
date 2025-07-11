@@ -214,6 +214,7 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date): Promis
       })),
 
       // Required properties from AnalyticsData interface
+      totalPageViews: pageViews.result.reduce((acc: number, curr: any) => acc + curr.count, 0),
       uniqueVisitors: pageViews.result.reduce((acc: number, curr: any) => acc + (curr.unique_users || 0), 0),
       averageTimeOnSite: pageViews.result.reduce((acc: number, curr: any) => acc + (curr.avg_time_on_page || 0), 0) / pageViews.result.length,
       bounceRate: 0, // This would need to be calculated from session data
