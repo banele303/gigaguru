@@ -40,10 +40,6 @@ export interface ProductWithReviews {
 }
 
 async function getProductData(productId: string) {
-  await prisma.product.update({
-    where: { id: productId },
-    data: { views: { increment: 1 } },
-  });
   noStore();
   try {
     const product = await prisma.product.findFirst({

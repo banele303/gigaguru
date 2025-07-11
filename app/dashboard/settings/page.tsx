@@ -55,7 +55,7 @@ export default function SettingsPage() {
       storeEmail: "",
       storePhone: "",
       storeAddress: "",
-      currency: "USD",
+      currency: "ZAR",
     },
   });
 

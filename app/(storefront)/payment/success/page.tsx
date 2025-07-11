@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { clearCart } from "@/app/actions";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import posthog from 'posthog-js';
 
 function SuccessContent() {
   const { user } = useKindeBrowserClient();
@@ -16,6 +17,14 @@ function SuccessContent() {
   useEffect(() => {
     if (user && !processed) {
       setProcessed(true);
+      
+      // Track purchase completion with PostHog
+      posthog.capture('purchase_completed', {
+        user_id: user.id,
+        currency: 'ZAR',
+        timestamp: new Date().toISOString(),
+      });
+      
       clearCart(user.id)
         .catch((err) => {
           console.error("Failed to clear cart", err);

@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { formatPrice } from "@/app/lib/utils";
 import { useAnalytics } from "@/app/hooks/useAnalytics";
+import { useProductView } from "@/app/hooks/useProductView";
 import Image from 'next/image';
 import type { ProductWithReviews, Review } from './page';
 import posthog from 'posthog-js';
@@ -270,7 +271,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
       } else {
         toast.success("Added to cart");
         // Track add to cart with PostHog
-        posthog.capture('product_added_to_cart', {
+        posthog.capture('add_to_cart', {
           product_id: product.id,
           product_name: product.name,
           product_price: product.price,
@@ -279,6 +280,7 @@ function ProductDetails({ product, averageRating, reviewCount }: Omit<ProductCli
           color: selectedColor,
           is_sale: product.isSale,
           discount_price: product.discountPrice,
+          total_value: (product.isSale ? product.discountPrice : product.price) * quantity,
         });
 
         refreshCart();
@@ -538,6 +540,13 @@ function LoadingProductDetails() {
 // Main Client Component
 export default function ProductClient({ product, averageRating, reviewCount, reviews }: ProductClientProps) {
   const [isLoading, setIsLoading] = useState(true);
+
+  // Track product view
+  useProductView({
+    productId: product.id,
+    productName: product.name,
+    price: product.price / 100, // Convert from cents to dollars
+  });
 
   useEffect(() => {
     // Simulate loading state

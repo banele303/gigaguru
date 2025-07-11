@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { CartItem } from "@/app/lib/interfaces";
 import { useCart } from "@/app/hooks/useCart";
+import posthog from 'posthog-js';
 
 interface BagDisplayProps {
   cart: Cart | null;
@@ -171,7 +172,23 @@ export function BagDisplay({ cart }: BagDisplayProps) {
             </div>
 
             <div className="mt-6">
-              <form action={checkOut}>
+              <form 
+                action={checkOut}
+                onSubmit={() => {
+                  // Track checkout started with PostHog
+                  posthog.capture('checkout_started', {
+                    cart_total: totalPrice,
+                    cart_items: cart?.items?.length || 0,
+                    currency: 'ZAR',
+                    item_details: cart?.items?.map(item => ({
+                      product_id: item.id,
+                      product_name: item.name,
+                      quantity: item.quantity,
+                      price: item.discountPrice && item.discountPrice < item.price ? item.discountPrice : item.price,
+                    })),
+                  });
+                }}
+              >
                 <ChceckoutButton />
               </form>
             </div>

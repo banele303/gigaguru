@@ -118,15 +118,17 @@ export function DashboardSidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-background overflow-y-auto">
-      <div className="flex h-24 items-center border-b px-4 sticky top-0 bg-background z-10">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <Image
-            src="/gigadarklogo.jpeg"
-            alt="SF Shoes Logo"
-            width={100}
-            height={100}
-            className="object-contain"
-          />
+      <div className="flex min-h-24 h-28 items-center border-b px-4 sticky top-0 bg-background z-10">
+        <Link href="/dashboard" className="flex items-center gap-2 w-full justify-center">
+          <div className="w-[150px] h-[48px] flex items-center justify-center rounded-md bg-muted">
+            <Image
+              src="/gigadarklogo.jpeg"
+              alt="SF Shoes Logo"
+              fill
+              className="object-contain rounded-md"
+              sizes="150px"
+            />
+          </div>
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-4">

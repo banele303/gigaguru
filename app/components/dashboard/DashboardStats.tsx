@@ -8,6 +8,17 @@ type Order = {
   amount: number;
 };
 
+// Format price in South African Rand (ZAR)
+function formatRand(amount: number) {
+  // Fix: Ensure amount is divided by 100 if stored in cents
+  const value = amount > 100000 ? amount / 100 : amount;
+  return value.toLocaleString("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    minimumFractionDigits: 2,
+  });
+}
+
 export async function DashboardStats() {
   const { products, user, order } = await getData();
 
@@ -23,9 +34,9 @@ export async function DashboardStats() {
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold">{formatPrice(totalAmount)}</p>
+          <p className="text-2xl font-bold">{formatRand(totalAmount)}</p>
           <p className="text-xs text-muted-foreground">
-            Total Revenue on ShoeMarshal
+            Total Revenue on Gigaguru
           </p>
         </CardContent>
       </Card>
@@ -37,7 +48,7 @@ export async function DashboardStats() {
         <CardContent>
           <p className="text-2xl font-bold">{products.length}</p>
           <p className="text-xs text-muted-foreground">
-            Total Products on ShoeMarshal
+            Total Products on Gigaguru
           </p>
         </CardContent>
       </Card>
@@ -49,7 +60,7 @@ export async function DashboardStats() {
         <CardContent>
           <p className="text-2xl font-bold">{order.length}</p>
           <p className="text-xs text-muted-foreground">
-            Total Sales on ShoeMarshal
+            Total Sales on Gigaguru
           </p>
         </CardContent>
       </Card>
@@ -61,7 +72,7 @@ export async function DashboardStats() {
         <CardContent>
           <p className="text-2xl font-bold">{user.length}</p>
           <p className="text-xs text-muted-foreground">
-            Total Users on ShoeMarshal
+            Total Users on Gigaguru
           </p>
         </CardContent>
       </Card>

@@ -9,6 +9,8 @@ interface MetricsCardProps {
   changeLabel?: string;
   icon?: React.ReactNode;
   className?: string;
+  trend?: "up" | "down" | "neutral";
+  description?: string;
 }
 
 export function MetricsCard({
@@ -18,39 +20,51 @@ export function MetricsCard({
   changeLabel,
   icon,
   className,
+  trend = "neutral",
+  description,
 }: MetricsCardProps) {
   const isPositive = change && change > 0;
   const isNegative = change && change < 0;
 
+  const getTrendColor = () => {
+    switch (trend) {
+      case "up":
+        return "text-green-600 dark:text-green-400";
+      case "down":
+        return "text-red-600 dark:text-red-400";
+      default:
+        return "text-gray-600 dark:text-gray-400";
+    }
+  };
+
   return (
-    <Card className={cn("", className)}>
+    <Card className={cn("transition-all duration-200 hover:shadow-md border-l-4 border-l-primary/20", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        {icon && <div className="text-muted-foreground">{icon}</div>}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {change !== undefined && (
-          <div className="flex items-center text-xs">
-            {isPositive ? (
-              <ArrowUpIcon className="mr-1 h-3 w-3 text-green-500" />
-            ) : isNegative ? (
-              <ArrowDownIcon className="mr-1 h-3 w-3 text-red-500" />
-            ) : null}
-            <span
-              className={cn(
-                "font-medium",
-                isPositive && "text-green-500",
-                isNegative && "text-red-500"
-              )}
-            >
-              {Math.abs(change)}%
-            </span>
-            <span className="ml-1 text-muted-foreground">
-              {changeLabel || "from last period"}
-            </span>
-          </div>
-        )}
+        <div className="flex flex-col space-y-1">
+          <div className="text-2xl font-bold tracking-tight">{value}</div>
+          {change !== undefined && (
+            <div className={cn("flex items-center text-xs", getTrendColor())}>
+              {isPositive ? (
+                <ArrowUpIcon className="mr-1 h-3 w-3" />
+              ) : isNegative ? (
+                <ArrowDownIcon className="mr-1 h-3 w-3" />
+              ) : null}
+              <span className="font-medium">
+                {change > 0 ? "+" : ""}{change.toFixed(1)}%
+              </span>
+              <span className="ml-1 opacity-70">
+                {changeLabel || "from last period"}
+              </span>
+            </div>
+          )}
+          {description && (
+            <p className="text-xs text-muted-foreground opacity-80">{description}</p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

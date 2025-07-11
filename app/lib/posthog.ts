@@ -2,7 +2,7 @@ import posthog from 'posthog-js';
 
 if (typeof window !== "undefined") {
   try {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
+    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_API_KEY || "", {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
       capture_pageview: true,
       capture_pageleave: true,
@@ -22,7 +22,7 @@ if (typeof window !== "undefined") {
         isIdentifiedID: false,
       },
       persistence: "localStorage",
-      persistence_name: "ph_" + (process.env.NEXT_PUBLIC_POSTHOG_KEY || "").substring(0, 6),
+      persistence_name: "ph_" + (process.env.NEXT_PUBLIC_POSTHOG_API_KEY || "").substring(0, 6),
       advanced_disable_decide: true,
       loaded: (posthog) => {
         if (process.env.NODE_ENV === "development") {
@@ -39,6 +39,7 @@ export default posthog;
 
 export interface AnalyticsData {
   uniqueVisitors: number;
+  totalPageViews: number;
   averageTimeOnSite: number;
   bounceRate: number;
   topPages: Array<{ path: string; views: number }>;
@@ -170,12 +171,12 @@ export const formatCurrency = (amount: number) => {
     return `${sign}R ${(absAmount / 1_000).toFixed(1)}K`;
   }
 
-  const formatted = new Intl.NumberFormat('en-US', {
+  const formatted = new Intl.NumberFormat('en-ZA', {
     style: 'currency',
     currency: 'ZAR',
   }).format(amount);
 
-  return formatted.replace('ZAR', 'R ');
+  return formatted.replace('ZAR', 'R');
 };
 
 // Helper function to format percentage

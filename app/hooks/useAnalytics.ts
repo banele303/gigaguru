@@ -1,4 +1,13 @@
-import { useEffect } from "react";
+import { useCallback } from 'react';
+import { 
+  trackEvent, 
+  trackProductView, 
+  trackAddToCart, 
+  trackPurchase,
+  trackSearch,
+  trackUserSignup,
+  trackUserLogin 
+} from '@/app/lib/posthog';
 
 type AnalyticsEvent = {
   type: "page_view" | "cart_add" | "checkout_start" | "checkout_complete";
@@ -18,7 +27,32 @@ type CartAbandonmentEvent = {
 };
 
 export function useAnalytics() {
-  const trackEvent = async (event: AnalyticsEvent) => {
+  const trackPageView = useCallback((page: string, properties?: Record<string, any>) => {
+    trackEvent('page_view', { page, ...properties });
+  }, []);
+
+  const trackButtonClick = useCallback((buttonName: string, location?: string) => {
+    trackEvent('button_click', { button: buttonName, location });
+  }, []);
+
+  const trackFormSubmission = useCallback((formName: string, success: boolean) => {
+    trackEvent('form_submission', { form: formName, success });
+  }, []);
+
+  const trackCartAction = useCallback((action: 'add' | 'remove' | 'update', productId: string, productName: string, quantity: number) => {
+    trackEvent('cart_action', { 
+      action, 
+      product_id: productId, 
+      product_name: productName, 
+      quantity 
+    });
+  }, []);
+
+  const trackCheckoutStep = useCallback((step: string, properties?: Record<string, any>) => {
+    trackEvent('checkout_step', { step, ...properties });
+  }, []);
+
+  const trackDatabaseEvent = async (event: AnalyticsEvent) => {
     try {
       await fetch("/api/analytics/track", {
         method: "POST",
@@ -50,36 +84,50 @@ export function useAnalytics() {
     }
   };
 
-  const trackPageView = (productId?: string) => {
-    trackEvent({
+  // Legacy methods for compatibility
+  const trackDatabasePageView = (productId?: string) => {
+    trackDatabaseEvent({
       type: "page_view",
       productId,
     });
   };
 
   const trackCartAdd = (productId: string) => {
-    trackEvent({
+    trackDatabaseEvent({
       type: "cart_add",
       productId,
     });
   };
 
   const trackCheckoutStart = () => {
-    trackEvent({
+    trackDatabaseEvent({
       type: "checkout_start",
     });
   };
 
   const trackCheckoutComplete = () => {
-    trackEvent({
+    trackDatabaseEvent({
       type: "checkout_complete",
     });
   };
 
   return {
-    trackEvent,
-    trackCartAbandonment,
     trackPageView,
+    trackButtonClick,
+    trackFormSubmission,
+    trackCartAction,
+    trackCheckoutStep,
+    trackDatabaseEvent,
+    trackCartAbandonment,
+    trackProductView,
+    trackAddToCart,
+    trackPurchase,
+    trackSearch,
+    trackUserSignup,
+    trackUserLogin,
+    trackEvent,
+    // Legacy methods
+    trackDatabasePageView,
     trackCartAdd,
     trackCheckoutStart,
     trackCheckoutComplete,
