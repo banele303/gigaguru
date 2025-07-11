@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, MoreHorizontal, PlusCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,6 +40,36 @@ type Product = {
   price: number;
   createdAt: Date;
 };
+
+// Skeleton component for loading state
+function ProductTableSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 5 }).map((_, index) => (
+        <TableRow key={index}>
+          <TableCell>
+            <Skeleton className="h-16 w-16 rounded-md" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-[200px]" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-16" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-24" />
+          </TableCell>
+          <TableCell className="text-end">
+            <Skeleton className="h-8 w-8 rounded-md ml-auto" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+}
 
 export default function ProductsRoute() {
   const router = useRouter();
@@ -113,11 +144,7 @@ export default function ProductsRoute() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    Loading products...
-                  </TableCell>
-                </TableRow>
+                <ProductTableSkeleton />
               ) : products.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">

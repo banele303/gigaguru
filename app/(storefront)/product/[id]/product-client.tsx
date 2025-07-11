@@ -574,8 +574,8 @@ export default function ProductClient({ product, averageRating, reviewCount, rev
 
   return (
     <div className="py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start lg:gap-x-24">
-        <div className="sticky top-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start lg:gap-x-24">
+        <div className="md:sticky md:top-4">
           <ImageSlider images={product.images} />
         </div>
         <div>

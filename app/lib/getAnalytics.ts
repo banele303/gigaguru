@@ -590,6 +590,38 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date) {
     trafficGrowth: 15.0, // Estimated growth when PostHog data is not available for comparison
   };
 
+  // Calculate Customer Lifetime Value (LTV)
+  const customerOrderData = await prisma.user.findMany({
+    include: {
+      orders: {
+        select: {
+          amount: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+
+  // Calculate LTV based on customer purchase history
+  let totalCustomerRevenue = 0;
+  let customersWithOrders = 0;
+  
+  customerOrderData.forEach(customer => {
+    if (customer.orders.length > 0) {
+      customersWithOrders++;
+      
+      // Calculate total revenue for this customer
+      const customerRevenue = customer.orders.reduce((sum, order) => sum + order.amount, 0);
+      totalCustomerRevenue += customerRevenue;
+    }
+  });
+
+  // Calculate average customer lifetime value
+  const averageCustomerRevenue = customersWithOrders > 0 ? totalCustomerRevenue / customersWithOrders : 0;
+  const customerLifetimeValue = averageCustomerRevenue / 100; // Convert from cents to rands
+
+  console.info(`Customer LTV calculation: ${customersWithOrders} customers with orders, avg LTV: R${customerLifetimeValue.toFixed(2)}`);
+
   // Funnel data - use real PostHog data if available, otherwise minimal real data
   const funnelData = realFunnelData.length > 0 ? realFunnelData : [
     { 
@@ -693,6 +725,7 @@ export async function getAnalyticsData(startDate?: Date, endDate?: Date) {
       returningCustomers: Math.max(0, uniqueVisitors - newUsersInPeriod),
       totalCustomers: totalUsers,
       averageOrderValue: totalOrders > 0 ? (totalRevenue / totalOrders) / 100 : 0,
+      customerLifetimeValue: customerLifetimeValue,
     },
   };
 }

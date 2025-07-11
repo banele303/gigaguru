@@ -59,7 +59,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
 
   return (
     <div
-      className="group relative rounded-xl bg-gradient-to-br from-white to-gray-50/50 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100/50 backdrop-blur-sm max-w-md mx-auto"
+      className="group relative rounded-xl bg-gradient-to-br from-white to-gray-50/50 shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100/50 backdrop-blur-sm max-w-lg mx-auto max-h-[540px] min-w-[300px]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -72,7 +72,7 @@ export function ProductCardClient({ item }: ProductCardClientProps) {
           <CarouselContent>
             {item.images.map((img, index) => (
               <CarouselItem key={index}>
-                <div className="relative h-[220px] sm:h-[280px] w-full overflow-hidden">
+                <div className="relative h-[240px] sm:h-[320px] w-full overflow-hidden">
                   <Image
                     src={img || "/placeholder.svg"}
                     alt={item.name}

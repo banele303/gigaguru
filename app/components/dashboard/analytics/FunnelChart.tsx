@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowDown, TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface FunnelStep {
   step: string;
@@ -58,7 +58,7 @@ export function FunnelChart({ data, title = "Sales Funnel", description = "Custo
       <CardContent>
         <div className="space-y-4">
           {/* Visual Funnel */}
-          <div className="relative flex flex-col items-center space-y-2 py-4">
+          <div className="relative flex flex-col items-center py-4">
             {enhancedData.map((step, index) => {
               const widthPercentage = (step.users / maxUsers) * 100;
               const isLast = index === enhancedData.length - 1;
@@ -108,13 +108,6 @@ export function FunnelChart({ data, title = "Sales Funnel", description = "Custo
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
                     </div>
                   </div>
-
-                  {/* Arrow between steps */}
-                  {!isLast && (
-                    <div className="flex items-center justify-center my-2">
-                      <ArrowDown className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                  )}
                 </div>
               );
             })}

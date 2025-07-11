@@ -25,7 +25,7 @@ export function FeaturedProductsClient({ products, totalPages, currentPage }: Fe
         <div className="mt-10">
           {products.length > 0 ? (
             <div>
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {products.map((item) => (
                   <ProductCard key={item.id} item={item} />
                 ))}
